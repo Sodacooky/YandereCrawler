@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <thread>
+#include <chrono>
 #include <curl/curl.h>	//from vcpkg
 
 class App {
@@ -36,8 +38,20 @@ private:
 	//curl写网页到字符串m_strNowWebSourceCode的callback
 	static size_t __WriteSourceCodeToString(void* buff, size_t block_size, size_t block_amount, void* string_ptr);
 
+	//curl下载图片
+	void __DownloadPicture(const std::string& link);
+
+	//给ID，分析这个页面，如果命中则下载
+	void __Process(unsigned int pic_id);
+
+	//用ID生成yande.re show链接
+	std::string __MakeURL(unsigned int id);
+
 	//判断网页可用性
-	bool IsPageExist();
+	bool __IsPageExist();
+
+	//判断是否tags全部满足
+	bool __IsMatch(const std::string& str_tags);
 
 	//从当前m_strNowWebSourceCode源码中提取出tags字符串
 	//前提网页得不是404
@@ -46,4 +60,10 @@ private:
 	//从当前m_strNowWebSourceCode源码中提取出大图的链接
 	//前提网页得不是404
 	std::string __ExtractLargeLink();
+
+	//用__ExtractLargeLink()的或其他的链接，提取出文件名
+	std::string __ExtractFilename(const std::string& link);
+
+	//将文件名中的%20去掉
+	void __TransSymbol(std::string& str);
 };
