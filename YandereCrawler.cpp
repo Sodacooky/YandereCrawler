@@ -13,22 +13,27 @@ int App::Main() {
 
 	curl_global_init(CURL_GLOBAL_ALL);
 
-	const int THREAD_AMOUNT = 64;
+	const int THREAD_AMOUNT = 1024;
 	future<void> fu[THREAD_AMOUNT];
+	//初次
 	for (int i=0; m_unId <= m_unEndId && i < THREAD_AMOUNT; m_unId++, i++) {
 		fu[i] = async(&App::__Process, this, m_unId);
+		this_thread::sleep_for(chrono::milliseconds(200));
 	}
+	//loop
 	while (m_unId <= m_unEndId) {
 		//未完成则等待
 		fu[m_unId % THREAD_AMOUNT].wait();
 		//分配新的任务
 		fu[m_unId % THREAD_AMOUNT] = async(&App::__Process, this, m_unId);
-
-		this_thread::sleep_for(chrono::microseconds(50));
+		//
 		m_unId++;
+		this_thread::sleep_for(chrono::milliseconds(125));
 	}
 
 	curl_global_cleanup();
+	cout << "Done." << endl;
+	cin.get();
 	return 0;
 }
 
@@ -41,6 +46,7 @@ void App::__Process(unsigned int pic_id) {
 	curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
 	curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, __WriteSourceCodeToString);
 	curl_easy_setopt(handle, CURLOPT_WRITEDATA, &src);
+	curl_easy_setopt(handle, CURLOPT_USERAGENT, R"(User-Agent,Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36 Edg/88.0.705.74)");
 	auto ret = curl_easy_perform(handle);
 	curl_easy_cleanup(handle);
 
@@ -118,6 +124,8 @@ void App::__DownloadPicture(const std::string& link) {
 	curl_easy_setopt(download_handle, CURLOPT_WRITEDATA, file);
 	curl_easy_setopt(download_handle, CURLOPT_SSL_VERIFYHOST, 0);
 	curl_easy_setopt(download_handle, CURLOPT_SSL_VERIFYPEER, 0);
+	curl_easy_setopt(download_handle, CURLOPT_USERAGENT, R"(User-Agent,Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36 Edg/88.0.705.74)");
+
 	//do
 	auto ret = curl_easy_perform(download_handle);
 
