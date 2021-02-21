@@ -14,8 +14,6 @@ int App::Main() {
 	curl_global_init(CURL_GLOBAL_ALL);
 
 	for (; m_unId <= m_unEndId; m_unId++) {
-		cout << "等待...";
-		this_thread::sleep_for(chrono::seconds(1));
 		__Process(m_unId);
 	}
 
@@ -44,16 +42,19 @@ void App::__Process(unsigned int pic_id) {
 
 	if (!__IsPageExist()) {
 		cout << "Not Found" << endl;
+		this_thread::sleep_for(chrono::milliseconds(250));
 		return;
 	}
 
 	if (!__IsMatch(__ExtractTags())) {
 		cout << "不符合" << endl;
+		this_thread::sleep_for(chrono::milliseconds(500));
 		return;
 	}
 
 	cout << "下载中...";
 	__DownloadPicture(__ExtractLargeLink());
+	this_thread::sleep_for(chrono::milliseconds(750));
 }
 
 void App::__TagsInputInterface() {
@@ -76,7 +77,6 @@ void App::__IdRangeInputInterface() {
 		cin >> m_unId;
 
 		cout << endl << "输入结束的图片id: ";
-		cin >> m_unEndId;
 
 		if (m_unId > m_unEndId) {
 			cout << "***  输入的id不正确，起始id应小于结束id  ***" << endl;
