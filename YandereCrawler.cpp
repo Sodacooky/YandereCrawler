@@ -77,6 +77,7 @@ void App::__IdRangeInputInterface() {
 		cin >> m_unId;
 
 		cout << endl << "输入结束的图片id: ";
+		cin >> m_unEndId;
 
 		if (m_unId > m_unEndId) {
 			cout << "***  输入的id不正确，起始id应小于结束id  ***" << endl;
