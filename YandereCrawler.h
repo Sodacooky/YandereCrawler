@@ -6,6 +6,7 @@
 #include <sstream>
 #include <thread>
 #include <chrono>
+#include <future>
 #include <curl/curl.h>	//from vcpkg
 
 class App {
@@ -13,12 +14,6 @@ public:
 	int Main();
 
 private:
-	/*
-		储存的是__WriteSourceCodeToString()写入的网页源码
-		下一次curl perform前应该清空它，进行重写
-	*/
-	std::string m_strNowWebSourceCode;
-
 	//用户输入的一组tags，必须所有tag都能在源码中找到才算是命中
 	std::vector<std::string> m_vec_strTags;
 
@@ -48,18 +43,18 @@ private:
 	std::string __MakeURL(unsigned int id);
 
 	//判断网页可用性
-	bool __IsPageExist();
+	bool __IsPageExist(const std::string& src);
 
 	//判断是否tags全部满足
 	bool __IsMatch(const std::string& str_tags);
 
 	//从当前m_strNowWebSourceCode源码中提取出tags字符串
 	//前提网页得不是404
-	std::string __ExtractTags();
+	std::string __ExtractTags(const std::string& src);
 
 	//从当前m_strNowWebSourceCode源码中提取出大图的链接
 	//前提网页得不是404
-	std::string __ExtractLargeLink();
+	std::string __ExtractLargeLink(const std::string& src);
 
 	//用__ExtractLargeLink()的或其他的链接，提取出文件名
 	std::string __ExtractFilename(const std::string& link);

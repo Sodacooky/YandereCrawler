@@ -4,19 +4,11 @@ C++ yande.re 下载器
 
 输入tags，界定图片ID的范围，然后在yande.re中爬取下载符合输入的tags的图片到程序目录。
 
-![img](screenshot.png)
-
 # 安装与编译
 
 只使用了curl库，准备一份curl，修改YandereCrawler.h中的#include，然后用你喜欢的方式去编译。
 
 当然，使用vcpkg安装curl更加方便。
-
-# 为什么不多线程？甚至要等待？
-
-了解yande.re的人应该清楚，这么一个用爱发电的网站已经被很多qq机器人或者其他爬虫每天狂下。
-
-我更建议同时打开1-2个实例，下载不同的ID段，然后去做别的事情。
 
 # 为什么是C++？
 

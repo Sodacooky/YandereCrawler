@@ -13,8 +13,19 @@ int App::Main() {
 
 	curl_global_init(CURL_GLOBAL_ALL);
 
-	for (; m_unId <= m_unEndId; m_unId++) {
-		__Process(m_unId);
+	const int THREAD_AMOUNT = 64;
+	future<void> fu[THREAD_AMOUNT];
+	for (int i=0; m_unId <= m_unEndId && i < THREAD_AMOUNT; m_unId++, i++) {
+		fu[i] = async(&App::__Process, this, m_unId);
+	}
+	while (m_unId <= m_unEndId) {
+		//未完成则等待
+		fu[m_unId % THREAD_AMOUNT].wait();
+		//分配新的任务
+		fu[m_unId % THREAD_AMOUNT] = async(&App::__Process, this, m_unId);
+
+		this_thread::sleep_for(chrono::microseconds(50));
+		m_unId++;
 	}
 
 	curl_global_cleanup();
@@ -22,39 +33,36 @@ int App::Main() {
 }
 
 void App::__Process(unsigned int pic_id) {
-	cout << "正在解析【" << pic_id << "】\t";
-
-	m_strNowWebSourceCode.clear();
+	string src;
 
 	CURL* handle = curl_easy_init();
 	curl_easy_setopt(handle, CURLOPT_URL, __MakeURL(pic_id).c_str());
 	curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0);
 	curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
 	curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, __WriteSourceCodeToString);
-	curl_easy_setopt(handle, CURLOPT_WRITEDATA, &m_strNowWebSourceCode);
+	curl_easy_setopt(handle, CURLOPT_WRITEDATA, &src);
 	auto ret = curl_easy_perform(handle);
 	curl_easy_cleanup(handle);
 
 	if (ret != CURLE_OK) {
-		cout << "CURL错误！" << endl;
+		printf("[%d]\tCURL错误\n", pic_id);
 		return;
 	}
 
-	if (!__IsPageExist()) {
-		cout << "Not Found" << endl;
-		this_thread::sleep_for(chrono::milliseconds(250));
+	if (!__IsPageExist(src)) {
+		printf("[%d]\t404 Not Found\n", pic_id);
+
 		return;
 	}
 
-	if (!__IsMatch(__ExtractTags())) {
-		cout << "不符合" << endl;
-		this_thread::sleep_for(chrono::milliseconds(500));
+	if (!__IsMatch(__ExtractTags(src))) {
+		printf("[%d]\t不匹配\n", pic_id);
+
 		return;
 	}
 
-	cout << "下载中...";
-	__DownloadPicture(__ExtractLargeLink());
-	this_thread::sleep_for(chrono::milliseconds(750));
+	__DownloadPicture(__ExtractLargeLink(src));
+	printf("[%d]\t下载完成\n", pic_id);
 }
 
 void App::__TagsInputInterface() {
@@ -114,20 +122,20 @@ void App::__DownloadPicture(const std::string& link) {
 	auto ret = curl_easy_perform(download_handle);
 
 	//check
-	if (ret == CURLE_OK) {
-		cout << " 下载完成！" << endl;
-	}
-	else {
-		cout << " 失败！" << endl;
-	}
+	//if (ret == CURLE_OK) {
+	//	cout << " 下载完成！" << endl;
+	//}
+	//else {
+	//	cout << " 失败！" << endl;
+	//}
 
 	//clean
 	curl_easy_cleanup(download_handle);
 	fclose(file);
 }
 
-bool App::__IsPageExist() {
-	if (m_strNowWebSourceCode.find("Not Found") == string::npos) {
+bool App::__IsPageExist(const std::string& src) {
+	if (src.find("Not Found") == string::npos) {
 		return true;
 	}
 	return false;
@@ -148,30 +156,30 @@ std::string App::__MakeURL(unsigned int id) {
 	return header + to_string(id);
 }
 
-std::string App::__ExtractTags() {
+std::string App::__ExtractTags(const std::string& src) {
 	//从HTML的meta中提取
 
 	//固定的开头
 	const string left_keyword = R"(<meta property="og:description" content=")";
 	//tags信息以另一边引号结束
 
-	auto left_keyword_pos = m_strNowWebSourceCode.find(left_keyword);
+	auto left_keyword_pos = src.find(left_keyword);
 	auto tags_startpos = left_keyword_pos + left_keyword.size();
 
-	auto tags_endpos = m_strNowWebSourceCode.find("\"", tags_startpos);
+	auto tags_endpos = src.find("\"", tags_startpos);
 
-	return std::string(m_strNowWebSourceCode.begin() + tags_startpos, m_strNowWebSourceCode.begin() + tags_endpos);
+	return std::string(src.begin() + tags_startpos, src.begin() + tags_endpos);
 }
 
-std::string App::__ExtractLargeLink() {
+std::string App::__ExtractLargeLink(const std::string& src) {
 	//原图链接都以此开头
 	const string left_keyword = R"(https://files.yande.re/image/)";
-	auto startpos = m_strNowWebSourceCode.find(left_keyword);
+	auto startpos = src.find(left_keyword);
 
 	//链接后都是引号
-	auto endpos = m_strNowWebSourceCode.find("\"", startpos);
+	auto endpos = src.find("\"", startpos);
 
-	return std::string(m_strNowWebSourceCode.begin() + startpos, m_strNowWebSourceCode.begin() + endpos);
+	return std::string(src.begin() + startpos, src.begin() + endpos);
 }
 
 std::string App::__ExtractFilename(const std::string& link) {
