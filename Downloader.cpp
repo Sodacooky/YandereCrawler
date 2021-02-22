@@ -57,7 +57,7 @@ bool Downloader::DownloadFile(const std::string& url) {
 	//output success message
 	string output_msg = "已下载 ";
 	if (filename.size() > 56) {
-		output_msg.append(filename.begin(), filename.begin() + 32);
+		output_msg.append(filename.begin(), filename.begin() + 56);
 		output_msg.append("....\n");
 	}
 	else {
@@ -75,7 +75,7 @@ void Downloader::AsyncDownloadFiles(const std::vector<std::string>& links) {
 	std::vector<future<bool>> vfus;
 	for (int i = 0; i != links.size(); i++) {
 		vfus.push_back(async(DownloadFile, links[i]));
-		this_thread::sleep_for(chrono::seconds(2));
+		this_thread::sleep_for(chrono::seconds(1));
 	}
 	for (int i = 0; i != vfus.size(); i++) {
 		//重新下载失败的，并且是单线程进行，确保可靠

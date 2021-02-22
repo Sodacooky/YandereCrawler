@@ -13,7 +13,7 @@ int App::Main() {
 	userinput.PageRangeInput();
 	Downloader::CreatePath();
 	for (unsigned int now_page = userinput.unPageStart; now_page <= userinput.unPageEnd; now_page++) {
-		cout << "正在下载页 " << now_page << endl;
+		cout << "*** 正在下载页 " << now_page << " ***" << endl;
 		auto parser = new WebParser(userinput.vstrTags, now_page);
 		if (parser->bAvaliable == false) {
 			delete parser;
@@ -26,6 +26,7 @@ int App::Main() {
 	cout << "\t━━━━━━━━━━━━━━━━━━━\n";
 	cout << "\t*** 似乎没有更多了 ***\n";
 	cout << "\t━━━━━━━━━━━━━━━━━━━\n";
+	cin.ignore(64, '\n');
 	cin.get();
 	return 0;
 }
