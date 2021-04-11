@@ -1,5 +1,8 @@
 # Build
-x64/
+build/
+
+# VSCode
+.vscode/
 
 # Visual Studio
 .vs/
