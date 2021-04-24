@@ -2,14 +2,20 @@
 
 C++ yande.re 下载器
 
-输入tags，界定页的范围，然后在yande.re中爬取下载符合输入的tags的图片到程序目录或者download子目录。
+输入tags，界定页的范围，然后在yande.re中下载符合输入的tags的图片。
 
 # 安装与编译
 
-只使用了curl库，准备一份curl，修改#include，然后用你喜欢的方式去编译。
+依赖curl、spdlog。
 
-当然，使用vcpkg安装curl更加方便。
+如果你使用vcpkg并设置好了环境变量那么你可以直接使用CMake编译或使用VisualStudio。
+
+否则你需要自己修改CMake。
 
 # 为什么是C++？
 
 懂的都懂。
+
+# 关于滥用
+
+yande.re原则上不允许此类程序，我并不会为此程序的滥用负责。
