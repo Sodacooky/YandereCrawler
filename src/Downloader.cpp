@@ -2,7 +2,9 @@
 
 using namespace std;
 
-static bool bPathAvaliable = false;
+static bool sg_bPathAvaliable = false;
+static std::string sg_strPath = "default_download";
+
 static const std::string strAgent =
     "User-Agent,Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36 Edg/88.0.705.74";
@@ -20,8 +22,7 @@ bool Downloader::DownloadPageToString(const std::string& url,
   auto result = curl_easy_perform(handle);
   bool ret = true;
   if (result != CURLE_OK) {
-    string output_msg = "CURL ERROR CODE : " + to_string(result) + "\n";
-    cout << output_msg;
+    spdlog::error("CURL 错误代码 : {}", result);
     ret = false;
   }
   // clean
@@ -29,14 +30,14 @@ bool Downloader::DownloadPageToString(const std::string& url,
   return ret;
 }
 
-bool Downloader::DownloadFile(const std::string& url) {
+bool Downloader::DownloadPageToFile(const std::string& url) {
   // io
-  string path = bPathAvaliable ? "./download/" : "./";
+  string path = sg_bPathAvaliable ? ("./" + sg_strPath + "/") : "./";
   string filename = path + __ExtractFilename(url);
   FILE* file;
   fopen_s(&file, filename.c_str(), "wb");
   if (file == nullptr) {
-    cout << " 读写错误！\n";
+    spdlog::error("无法写文件");
     return false;
   }
   // init curl
@@ -50,54 +51,56 @@ bool Downloader::DownloadFile(const std::string& url) {
   auto result = curl_easy_perform(download_handle);
   // check
   if (result != CURLE_OK) {
-    string output_msg_fail = "CURL ERROR CODE : " + to_string(result) + "\n";
-    cout << output_msg_fail;
+    spdlog::error("CURL 错误代码 : {}", result);
     // clean
     curl_easy_cleanup(download_handle);
     fclose(file);
     return false;
   }
-  // output success message
-  string output_msg = "已下载 ";
-  if (filename.size() > 56) {
-    output_msg.append(filename.begin(), filename.begin() + 56);
-    output_msg.append("....\n");
-  } else {
-    output_msg.append(filename.begin(), filename.end());
-    output_msg.append(" \n");
-  }
-  cout << output_msg;
   // clean
   curl_easy_cleanup(download_handle);
   fclose(file);
   return true;
 }
 
-void Downloader::AsyncDownloadFiles(const std::vector<std::string>& links) {
+void Downloader::MultiThreadDownloadFiles(
+    const std::vector<std::string>& links) {
   std::vector<future<bool>> vfus;
   for (int i = 0; i != links.size(); i++) {
-    vfus.push_back(async(DownloadFile, links[i]));
-    this_thread::sleep_for(chrono::seconds(1));
+    vfus.push_back(async(DownloadPageToFile, links[i]));
+    this_thread::sleep_for(chrono::milliseconds(500));
   }
   for (int i = 0; i != vfus.size(); i++) {
     //重新下载失败的，并且是单线程进行，确保可靠
     if (vfus[i].valid() && vfus[i].get() == false) {
-      if (!DownloadFile(links[i])) {
-        string output_msg = "AsyncDownloadFiles()下载 " + links[i] + " 失败\n";
-        cout << output_msg;
+      if (!DownloadPageToFile(links[i])) {
+        spdlog::warn("下载失败 {}", links[i]);
       }
     }
   }
 }
 
-void Downloader::CreatePath() {
-  bool succeed = CreateDirectory("./download", nullptr);
-  if (!succeed) {
-    if (GetLastError() != ERROR_ALREADY_EXISTS) {
-      cout << "无法创建文件夹，将在程序目录存放图片" << endl;
-    }
+void Downloader::CreatePath(const std::string& pathname) {
+  sg_strPath = pathname;
+
+  if (mkdir(pathname.c_str()) == 0) {
+    spdlog::info("创建了文件夹{}", sg_strPath);
+    sg_bPathAvaliable = true;
+    return;
   }
-  bPathAvaliable = true;
+
+  // can't create dir
+  auto dir_handle = opendir(pathname.c_str());
+  if (dir_handle != nullptr) {  // already exist
+    closedir(dir_handle);
+    spdlog::info("{}文件夹已经存在", pathname);
+    sg_bPathAvaliable = true;
+    return;
+  }
+  // actually no way
+  spdlog::warn("无法创建{}文件夹并将在程序同目录保存图片", pathname);
+  sg_strPath = "./";
+  sg_bPathAvaliable = false;
 }
 
 size_t Downloader::__WriteToString(char* buff, size_t block_size,

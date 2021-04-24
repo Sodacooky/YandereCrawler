@@ -4,6 +4,9 @@ build/
 # VSCode
 .vscode/
 
+# docs
+docs/
+
 # Visual Studio
 .vs/
 *.vcxproj
