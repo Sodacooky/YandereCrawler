@@ -22,10 +22,6 @@ class Downloader {
   static bool DownloadPageToString(const std::string& url,
                                    std::string& src_out);
 
-  // 下载一个图片到文件
-  // 返回是否成功
-  static bool DownloadPageToFile(const std::string& url);
-
   // 多线程下载一组图片到文件
   // DownloadPageToFile的封装
   static void MultiThreadDownloadFiles(const std::vector<std::string>& links);
@@ -34,6 +30,11 @@ class Downloader {
   static void CreatePath(const std::string& pathname);
 
  private:
+  // 下载一个图片到文件
+  // 返回是否成功
+  static bool __DownloadPageToFile(const std::string& url, int index,
+                                   int amount);
+
   // curl write callback
   static size_t __WriteToString(char* buff, size_t block_size,
                                 size_t block_amount, void* str_ptr);

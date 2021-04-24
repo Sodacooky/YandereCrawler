@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 set(VCPKG_TARGET_TRIPLET x64-mingw-static)
-set(CMAKE_TOOLCHAIN_FILE $ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
 include($ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
+set(CMAKE_TOOLCHAIN_FILE $ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
 project(YandereCrawler)
 
 # main.cpp

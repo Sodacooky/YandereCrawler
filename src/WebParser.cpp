@@ -19,7 +19,7 @@ void WebParser::__Do() {
   vector<future<vector<string>>> fus_fetching;
   for (int index = 0; index != m_vec_strPageLinks.size(); index++) {
     fus_fetching.push_back(async(__GetLinks, this, index));
-    this_thread::sleep_for(chrono::milliseconds(1000));
+    this_thread::sleep_for(chrono::milliseconds(100));
   }
 
   //回收数据

@@ -18,11 +18,12 @@ bool Downloader::DownloadPageToString(const std::string& url,
   curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
   curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, __WriteToString);
   curl_easy_setopt(handle, CURLOPT_WRITEDATA, &src_out);
+  curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, 320000);  // 32s timeout
   // do
   auto result = curl_easy_perform(handle);
   bool ret = true;
   if (result != CURLE_OK) {
-    spdlog::error("CURL 错误代码 : {}", result);
+    spdlog::critical("CURL 错误代码 : {}", result);
     ret = false;
   }
   // clean
@@ -30,14 +31,16 @@ bool Downloader::DownloadPageToString(const std::string& url,
   return ret;
 }
 
-bool Downloader::DownloadPageToFile(const std::string& url) {
+bool Downloader::__DownloadPageToFile(const std::string& url, int index,
+                                      int amount) {
   // io
   string path = sg_bPathAvaliable ? ("./" + sg_strPath + "/") : "./";
-  string filename = path + __ExtractFilename(url);
+  string filename = __ExtractFilename(url);
+  string fullfilename = path + filename;
   FILE* file;
-  fopen_s(&file, filename.c_str(), "wb");
+  fopen_s(&file, fullfilename.c_str(), "wb");
   if (file == nullptr) {
-    spdlog::error("无法写文件");
+    spdlog::critical("写文件失败");
     return false;
   }
   // init curl
@@ -47,16 +50,21 @@ bool Downloader::DownloadPageToFile(const std::string& url) {
   curl_easy_setopt(download_handle, CURLOPT_URL, url.c_str());
   curl_easy_setopt(download_handle, CURLOPT_WRITEFUNCTION, nullptr);
   curl_easy_setopt(download_handle, CURLOPT_WRITEDATA, file);
+  curl_easy_setopt(download_handle, CURLOPT_TIMEOUT_MS, 640000);  // 64s timeout
   // do
   auto result = curl_easy_perform(download_handle);
   // check
   if (result != CURLE_OK) {
-    spdlog::error("CURL 错误代码 : {}", result);
+    spdlog::critical("CURL 错误代码 : {}", result);
     // clean
     curl_easy_cleanup(download_handle);
     fclose(file);
     return false;
   }
+
+  spdlog::info("[{}/{}]下载完成 {}...", index + 1, amount,
+               __ExtractShort(filename));
+
   // clean
   curl_easy_cleanup(download_handle);
   fclose(file);
@@ -66,26 +74,31 @@ bool Downloader::DownloadPageToFile(const std::string& url) {
 void Downloader::MultiThreadDownloadFiles(
     const std::vector<std::string>& links) {
   queue<future<bool>> que_fus;
-  for (int i = 0; i != links.size(); i++) {
+  int index_links = 0;
+  while (index_links != links.size()) {
     // start work
-    que_fus.push(async(DownloadPageToFile, links[i]));
-    // wait time
-    this_thread::sleep_for(chrono::milliseconds(1500));
-    // try pop
-    if (que_fus.front().valid()) {
-      if (que_fus.front().get() == true) {
-        // success
-        float progress = (i + 1) * 1.0f / links.size() * 100.0f;
-        spdlog::info("[{:.1f}%]下载完成 {}...", progress,
-                     __ExtractShort(__ExtractFilename(links[i])));
-      } else {
-        // fail
-        spdlog::warn("下载失败 {}", links[i]);
+    if (que_fus.size() < 4) {
+      que_fus.push(async(__DownloadPageToFile, links[index_links], index_links,
+                         links.size()));
+      if (que_fus.front().valid() == false) que_fus.pop();
+      index_links++;
+    }
+    // try pop and wait
+    if (que_fus.size() > 0) {
+      // wait for done
+      auto stat = que_fus.front().wait_for(chrono::milliseconds(500));
+      // not done
+      if (stat != future_status::ready) {
+        continue;
       }
+      // failed
+      if (que_fus.front().get() == false) {
+        spdlog::warn("下载失败 {}", links[index_links]);
+      }
+      // clean
       que_fus.pop();
     }
   }
-  // que_fus析构时，将会等待所有future
 }
 
 void Downloader::CreatePath(const std::string& pathname) {
@@ -101,7 +114,7 @@ void Downloader::CreatePath(const std::string& pathname) {
   auto dir_handle = opendir(pathname.c_str());
   if (dir_handle != nullptr) {  // already exist
     closedir(dir_handle);
-    spdlog::info("{}文件夹已经存在", pathname);
+    spdlog::warn("{}文件夹已经存在", pathname);
     sg_bPathAvaliable = true;
     return;
   }
@@ -151,9 +164,9 @@ std::string Downloader::__ExtractFilename(const std::string& src_str) {
 }
 
 std::string Downloader::__ExtractShort(const std::string& src_str) {
-  if (src_str.size() <= 32) {
-    return string(src_str.begin(), src_str.end());
+  if (src_str.size() <= 48) {
+    return string(src_str.begin() + 10, src_str.end());
   } else {
-    return string(src_str.begin(), src_str.begin() + 32);
+    return string(src_str.begin() + 10, src_str.begin() + 48);
   }
 }

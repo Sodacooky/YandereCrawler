@@ -19,6 +19,8 @@ class App {
     spdlog::info("输入了 {} 个tags", vec_strTags.size());
     if (vec_strTags.size() < 1) return -1;
 
+    spdlog::info("正在获取页数...");
+
     // fetch page amount
     FetchPageAmount();
     if (nTagsPageAmount <= 0) return -2;
@@ -28,17 +30,21 @@ class App {
     spdlog::info("将下载从{}到{}页，共{}页", nPageLeft, nPageRight,
                  nPageRight - nPageLeft + 1);
 
+    spdlog::info("正在下载链接数据...");
+
     // get links
     FetchLinks();
 
     // create path
     Downloader::CreatePath(vec_strTags[0]);
 
+    spdlog::info("开始下载图片...");
+
     // downloaded
     Downloader::MultiThreadDownloadFiles(vec_strLinks);
 
     cout << endl;
-    spdlog::info("下载完成");
+    spdlog::info("所有图片下载完成!");
     return 0;
   }
 
