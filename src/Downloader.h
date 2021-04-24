@@ -8,6 +8,7 @@
 #include <chrono>
 #include <future>
 #include <iostream>
+#include <queue>
 #include <string>
 #include <vector>
 
@@ -45,6 +46,9 @@ class Downloader {
 
   // 将链接的最后一段（通常是文件名）提取出来
   static std::string __ExtractFilename(const std::string& src_str);
+
+  //传入一个文件名，返回前32个字符
+  static std::string __ExtractShort(const std::string& src_str);
 };
 
 #endif  // __DOWNLOADER_H__

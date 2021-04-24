@@ -65,19 +65,27 @@ bool Downloader::DownloadPageToFile(const std::string& url) {
 
 void Downloader::MultiThreadDownloadFiles(
     const std::vector<std::string>& links) {
-  std::vector<future<bool>> vfus;
+  queue<future<bool>> que_fus;
   for (int i = 0; i != links.size(); i++) {
-    vfus.push_back(async(DownloadPageToFile, links[i]));
-    this_thread::sleep_for(chrono::milliseconds(500));
-  }
-  for (int i = 0; i != vfus.size(); i++) {
-    //重新下载失败的，并且是单线程进行，确保可靠
-    if (vfus[i].valid() && vfus[i].get() == false) {
-      if (!DownloadPageToFile(links[i])) {
+    // start work
+    que_fus.push(async(DownloadPageToFile, links[i]));
+    // wait time
+    this_thread::sleep_for(chrono::milliseconds(1500));
+    // try pop
+    if (que_fus.front().valid()) {
+      if (que_fus.front().get() == true) {
+        // success
+        float progress = (i + 1) * 1.0f / links.size() * 100.0f;
+        spdlog::info("[{:.1f}%]下载完成 {}...", progress,
+                     __ExtractShort(__ExtractFilename(links[i])));
+      } else {
+        // fail
         spdlog::warn("下载失败 {}", links[i]);
       }
+      que_fus.pop();
     }
   }
+  // que_fus析构时，将会等待所有future
 }
 
 void Downloader::CreatePath(const std::string& pathname) {
@@ -140,4 +148,12 @@ std::string Downloader::__ExtractFilename(const std::string& src_str) {
   string tmp(start + 1, src_str.end());
   __TransSymbol(tmp);
   return tmp;
+}
+
+std::string Downloader::__ExtractShort(const std::string& src_str) {
+  if (src_str.size() <= 32) {
+    return string(src_str.begin(), src_str.end());
+  } else {
+    return string(src_str.begin(), src_str.begin() + 32);
+  }
 }

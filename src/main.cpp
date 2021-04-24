@@ -21,20 +21,21 @@ class App {
 
     // fetch page amount
     FetchPageAmount();
-    if (nPageAmount <= 0) return -2;
+    if (nTagsPageAmount <= 0) return -2;
 
     // user decide page range
     PageInput();
     spdlog::info("将下载从{}到{}页，共{}页", nPageLeft, nPageRight,
                  nPageRight - nPageLeft + 1);
 
+    // get links
+    FetchLinks();
+
     // create path
     Downloader::CreatePath(vec_strTags[0]);
 
-    // work start
-    for (int nowPage = nPageLeft; nowPage <= nPageRight; nowPage++) {
-      DownloadThisPage(nowPage);
-    }
+    // downloaded
+    Downloader::MultiThreadDownloadFiles(vec_strLinks);
 
     cout << endl;
     spdlog::info("下载完成");
@@ -64,13 +65,13 @@ class App {
         spdlog::error("输入的页数范围不正确，{}>{}", nPageLeft, nPageRight);
         continue;
       }
-      if (nPageLeft > nPageAmount) {
+      if (nPageLeft > nTagsPageAmount) {
         spdlog::error("起始页超过了页数范围");
         continue;
       }
-      if (nPageRight > nPageAmount) {
+      if (nPageRight > nTagsPageAmount) {
         spdlog::warn("终止页超过了页数范围，将在最后一页停止");
-        nPageRight = nPageAmount;
+        nPageRight = nTagsPageAmount;
         // break;
       }
       break;
@@ -91,52 +92,12 @@ class App {
     if (navigationParser.nPageAmount <= 0) {
       spdlog::error("请检查是否能连接到yande.re和Tags是否输入正确");
     }
-    nPageAmount = navigationParser.nPageAmount;
+    nTagsPageAmount = navigationParser.nPageAmount;
   }
 
-  std::string ExtractShortFilename(const std::string& url) {
-    // copy from Downloader::
-    auto start = url.begin();
-    for (auto iter = url.end() - 1; iter != url.begin(); iter--) {
-      if (*iter == '/') {
-        start = iter;
-        break;
-      }
-    }
-    string tmp(start + 1, url.end());
-    for (auto iter = tmp.begin(); iter != tmp.end();) {
-      if (*iter == '%') {
-        iter = tmp.erase(iter, iter + 3);
-        iter = tmp.insert(iter, ' ') + 1;
-      } else {
-        iter++;
-      }
-    }
-    return tmp;
-  }
-
-  void DownloadThisPage(int nowPage) {
-    // download page
-    spdlog::info("正在获取第 {} 页链接数据", nowPage);
-    auto parser = new WebParser(vec_strTags, nowPage);
-    spdlog::info("获取到第 {} 页链接数量为 {}", nowPage,
-                 parser->vec_strLinks.size());
-    if (parser->vec_strLinks.size() == 0) {
-      delete parser;
-      return;
-    }
-    // download file
-    for (int index = 0; index != parser->vec_strLinks.size(); index++) {
-      Downloader::DownloadPageToFile(parser->vec_strLinks[index]);
-      // calc download progress
-      float pic_amount = (nPageRight - nPageLeft + 1.0) * 40;
-      float pic_downloaded = ((nowPage - nPageLeft) * 40) + index + 1;
-      float fProgress = pic_downloaded / pic_amount * 100.0f;
-      // print
-      spdlog::info("[{:3.1f}%]下载完成 {}", fProgress,
-                   ExtractShortFilename(parser->vec_strLinks[index]));
-    }
-    delete parser;
+  void FetchLinks() {
+    WebParser parser(vec_strTags, nPageLeft, nPageRight, vec_strLinks);
+    // it done
   }
 
  public:
@@ -145,7 +106,9 @@ class App {
   //
   std::vector<std::string> vec_strTags;
   //
-  int nPageAmount;
+  int nTagsPageAmount;
+  //
+  std::vector<std::string> vec_strLinks;
 };
 
 int main() {
