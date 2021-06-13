@@ -4,9 +4,9 @@
 
 #include <curl/curl.h>
 #include <spdlog/spdlog.h>
-#include <stdlib.h>
 
 #include <chrono>
+#include <filesystem>
 #include <future>
 #include <iostream>
 #include <queue>
@@ -23,9 +23,9 @@ class Downloader {
   static bool DownloadPageToString(const std::string &url,
                                    std::string &src_out);
 
-  // 多线程下载一组图片到文件
+  // 单线程下载一组图片到文件
   // DownloadPageToFile的封装
-  static void MultiThreadDownloadFiles(const std::vector<std::string> &links);
+  static void DownloadFiles(const std::vector<std::string> &links);
 
   // 创建文件夹
   static void CreatePath(const std::string &pathname);
@@ -33,8 +33,7 @@ class Downloader {
  private:
   // 下载一个图片到文件
   // 返回是否成功
-  static bool __DownloadPageToFile(const std::string &url, int index,
-                                   int amount);
+  static bool __DownloadPageToFile(const std::string &url);
 
   // curl write callback
   static size_t __WriteToString(char *buff, size_t block_size,

@@ -45,7 +45,7 @@ class App {
     spdlog::info("开始下载图片...");
 
     // downloaded
-    Downloader::MultiThreadDownloadFiles(vec_strLinks);
+    Downloader::DownloadFiles(vec_strLinks);
 
     cout << endl;
     spdlog::info("所有图片下载完成!");

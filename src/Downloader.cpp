@@ -30,8 +30,7 @@ bool Downloader::DownloadPageToString(const std::string &url,
   return ret;
 }
 
-bool Downloader::__DownloadPageToFile(const std::string &url, int index,
-                                      int amount) {
+bool Downloader::__DownloadPageToFile(const std::string &url) {
   // 生成文件名
   string path = sg_strPath + "/";
   string filename = __ExtractFilename(url);
@@ -50,7 +49,7 @@ bool Downloader::__DownloadPageToFile(const std::string &url, int index,
   curl_easy_setopt(download_handle, CURLOPT_URL, url.c_str());
   curl_easy_setopt(download_handle, CURLOPT_WRITEFUNCTION, nullptr);
   curl_easy_setopt(download_handle, CURLOPT_WRITEDATA, file);
-  curl_easy_setopt(download_handle, CURLOPT_TIMEOUT_MS, 640000);  // 64s timeout
+  curl_easy_setopt(download_handle, CURLOPT_TIMEOUT_MS, 640000);
   // do
   auto result = curl_easy_perform(download_handle);
   // check
@@ -63,46 +62,38 @@ bool Downloader::__DownloadPageToFile(const std::string &url, int index,
     return false;
   }
 
-  spdlog::info("[{}/{}]下载完成 {}...", index + 1, amount,
-               __ExtractShort(filename));
-
   // clean
   curl_easy_cleanup(download_handle);
   fclose(file);
   return true;
 }
 
-void Downloader::MultiThreadDownloadFiles(
-    const std::vector<std::string> &links) {
-  queue<future<bool>> que_fus;
-  int index_links = 0;
-  while (index_links != links.size()) {
-    // start work
-    if (que_fus.size() < 2) {
-      que_fus.push(async(__DownloadPageToFile, links[index_links], index_links,
-                         (int)links.size()));
-      if (que_fus.front().valid() == false) que_fus.pop();
-      index_links++;
-    }
-    // try pop and wait
-    if (que_fus.size() > 0) {
-      // wait for done
-      auto stat = que_fus.front().wait_for(chrono::milliseconds(500));
-      // not done
-      if (stat != future_status::ready) {
-        continue;
-      }
-      // clean
-      que_fus.pop();
+void Downloader::DownloadFiles(const std::vector<std::string> &links) {
+  for (int index_links = 0; index_links != links.size(); index_links++) {
+    auto short_name = __ExtractShort(__ExtractFilename(links[index_links]));
+    if (__DownloadPageToFile(links[index_links])) {
+      float progress = (index_links + 1) * 1.0f / (links.size() + 1) * 100.0f;
+      spdlog::info("[{:2.1f}%] 完成: {}", progress, short_name);
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    } else {
+      spdlog::warn(" 失败: {}", short_name);
     }
   }
 }
 
 void Downloader::CreatePath(const std::string &pathname) {
   sg_strPath = pathname;
-  string cmd = "mkdir " + sg_strPath;
-  spdlog::info("执行命令: " + cmd);
-  system(cmd.c_str());
+  std::filesystem::directory_entry de(pathname);
+  if (de.exists() && de.is_directory()) {
+    spdlog::warn("文件夹 {} 已存在，使用它", pathname);
+    return;
+  }
+  if (std::filesystem::create_directories(pathname)) {
+    spdlog::info("创建了文件夹 {}", pathname);
+  } else {
+    spdlog::warn("文件夹 {} 无法创建且不存在，将在程序目录保存文件", pathname);
+    sg_strPath = ".";
+  }
 }
 
 size_t Downloader::__WriteToString(char *buff, size_t block_size,
