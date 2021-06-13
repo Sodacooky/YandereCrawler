@@ -7,7 +7,7 @@ void WebParser::__Do() {
   for (int pageNow = m_nPageStart; pageNow <= m_nPageEnd; pageNow++) {
     string url = "https://yande.re/post?page=" + to_string(pageNow);
     url.append("&tags=");
-    for (auto& tag : m_rvec_strTags) {
+    for (auto &tag : m_rvec_strTags) {
       url.append(tag);
       url.append("+");
     }
@@ -18,14 +18,14 @@ void WebParser::__Do() {
   //__GetLinks()返回值是vector<string>
   vector<future<vector<string>>> fus_fetching;
   for (int index = 0; index != m_vec_strPageLinks.size(); index++) {
-    fus_fetching.push_back(async(__GetLinks, this, index));
+    fus_fetching.push_back(async(&WebParser::__GetLinks, this, index));
     this_thread::sleep_for(chrono::milliseconds(100));
   }
 
   //回收数据
   int fetch_page = m_nPageStart;
-  for (auto& fu : fus_fetching) {
-    for (auto& link : fu.get()) {
+  for (auto &fu : fus_fetching) {
+    for (auto &link : fu.get()) {
       m_rvec_strLinks.push_back(link);
     }
     float progress = (fetch_page - m_nPageStart + 1) * 1.0f /

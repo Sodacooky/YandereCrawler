@@ -1,10 +1,10 @@
-#include "LinkParser.h"
+﻿#include "LinkParser.h"
 
 using namespace std;
 
 void LinkParser::__Do() {
   //定位原图链接
-  auto ___FindDownloadLinkPos = [this](int begin_pos) -> int {
+  auto ___FindDownloadLinkPos = [this](size_t begin_pos) -> size_t {
     //找到链接类头
     auto pos =
         m_rstrWebSource.find(R"(<a class="directlink largeimg")", begin_pos);
@@ -14,7 +14,7 @@ void LinkParser::__Do() {
   };
 
   //提取出原图
-  auto ___ExtractDownloadLink = [this](int link_start_pos) -> string {
+  auto ___ExtractDownloadLink = [this](size_t link_start_pos) -> string {
     //链接以引号结束
     auto endPos = m_rstrWebSource.find("\"", link_start_pos);
     //将链接头到引号前拷贝
@@ -23,7 +23,7 @@ void LinkParser::__Do() {
   };
 
   //当前查找位置
-  int nowFindingPos = 0;
+  size_t nowFindingPos = 0;
 
   //提取整个网页的所有图片链接
   while (true) {

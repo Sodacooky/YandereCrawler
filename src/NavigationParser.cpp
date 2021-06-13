@@ -1,4 +1,4 @@
-#include "NavigationParser.h"
+﻿#include "NavigationParser.h"
 
 using namespace std;
 
@@ -16,7 +16,9 @@ void NavigationParser::__Do() {
   while (true) {
     //带空格结尾的Page只在navitation中
     startPos = m_rstrWebSource.find("Page ", startPos);
-    if (startPos == string::npos) break;
+    if (startPos == string::npos) {
+      break;
+    }
     startPos += 5;  // skip "Page "
     auto pageTextEnd = m_rstrWebSource.find("\"", startPos);
     // extract page

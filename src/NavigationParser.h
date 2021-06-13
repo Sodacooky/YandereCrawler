@@ -1,4 +1,4 @@
-#ifndef __NAVIGATIONPARSER_H__
+﻿#ifndef __NAVIGATIONPARSER_H__
 #define __NAVIGATIONPARSER_H__
 
 #include <sstream>
@@ -9,7 +9,7 @@
 //以此确定总共页数
 class NavigationParser {
  public:
-  NavigationParser(const std::string& webSource)
+  NavigationParser(const std::string &webSource)
       : nPageAmount(-1), m_rstrWebSource(webSource) {
     __Do();
   };
@@ -23,6 +23,6 @@ class NavigationParser {
   void __Do();
 
  private:
-  const std::string& m_rstrWebSource;
+  const std::string &m_rstrWebSource;
 };
 #endif  // __NAVIGATIONPARSER_H__

@@ -1,4 +1,4 @@
-#ifndef __LINKPARSER_H__
+﻿#ifndef __LINKPARSER_H__
 #define __LINKPARSER_H__
 
 #include <string>
@@ -8,7 +8,7 @@
 //如果网页中没有原图那么vec_strLinks为空
 class LinkParser {
  public:
-  LinkParser(const std::string& webSource) : m_rstrWebSource(webSource) {
+  LinkParser(const std::string &webSource) : m_rstrWebSource(webSource) {
     __Do();
   }
 
@@ -20,6 +20,6 @@ class LinkParser {
   void __Do();
 
  private:
-  const std::string& m_rstrWebSource;
+  const std::string &m_rstrWebSource;
 };
 #endif  // __LINKPARSER_H__

@@ -1,4 +1,4 @@
-#include <spdlog/spdlog.h>
+﻿#include <spdlog/spdlog.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -17,13 +17,17 @@ class App {
     // user decide tags
     TagsInput();
     spdlog::info("输入了 {} 个tags", vec_strTags.size());
-    if (vec_strTags.size() < 1) return -1;
+    if (vec_strTags.size() < 1) {
+      return -1;
+    }
 
     spdlog::info("正在获取页数...");
 
     // fetch page amount
     FetchPageAmount();
-    if (nTagsPageAmount <= 0) return -2;
+    if (nTagsPageAmount <= 0) {
+      return -2;
+    }
 
     // user decide page range
     PageInput();
@@ -86,7 +90,7 @@ class App {
 
   void FetchPageAmount() {
     string first_page_url = "https://yande.re/post?tags=";
-    for (auto& tag : vec_strTags) {
+    for (auto &tag : vec_strTags) {
       first_page_url.append(tag);
       first_page_url.append("+");
     }
@@ -118,10 +122,6 @@ class App {
 };
 
 int main() {
-#ifdef _WINDOWS_
-  // change windows terminal(cmd&powershell) encoding
-  system("chcp 65001");
-#endif
   // Application entrance
   App app;
   return app.Main();
