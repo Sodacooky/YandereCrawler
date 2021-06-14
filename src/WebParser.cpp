@@ -19,20 +19,18 @@ void WebParser::__Do() {
   vector<future<vector<string>>> fus_fetching;
   for (int index = 0; index != m_vec_strPageLinks.size(); index++) {
     fus_fetching.push_back(async(&WebParser::__GetLinks, this, index));
-    this_thread::sleep_for(chrono::milliseconds(100));
+    float progress = (index + 1) * 1.0f / m_vec_strPageLinks.size() * 100.0f;
+    spdlog::info("[{:.1f}%] 正在下载第 {} 页链接数据", progress, index + 1);
+    this_thread::sleep_for(chrono::milliseconds(500));
   }
 
   //回收数据
-  int fetch_page = m_nPageStart;
   for (auto &fu : fus_fetching) {
     for (auto &link : fu.get()) {
       m_rvec_strLinks.push_back(link);
     }
-    float progress = (fetch_page - m_nPageStart + 1) * 1.0f /
-                     (m_nPageEnd - m_nPageStart + 1) * 100.0f;
-    spdlog::info("[{:.1f}%]第 {} 页链接数据已下载", progress, fetch_page);
-    fetch_page++;
   }
+  spdlog::info("链接数据下载完成");
 }
 
 std::vector<std::string> WebParser::__GetLinks(int pageLinksIndex) {

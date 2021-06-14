@@ -67,43 +67,38 @@ bool Downloader::__DownloadPageToFile(const std::string &url) {
 }
 
 void Downloader::MultiDownloadFiles(const std::vector<std::string> &links) {
-  const int thread_amount = 4;
-  queue<future<bool>> que_fus;
-
-  int now_dispatch_index = 0;
+  vector<future<bool>> vec_fus;
+  int thread_amount = 4;
   int done_amount = 0;
   int failed_amount = 0;
-  int amount = links.size();
-
-  while (now_dispatch_index < amount) {
-    // try push
-    if (que_fus.size() < thread_amount) {
-      que_fus.push(async(launch::async, __DownloadPageToFile,
-                         links[now_dispatch_index]));
-      now_dispatch_index++;
+  int links_index = 0;
+  int links_amount = links.size();
+  while (links_index < links.size()) {
+    if (vec_fus.size() < thread_amount) {
+      vec_fus.push_back(async(__DownloadPageToFile, links[links_index]));
+      links_index++;
     }
-    // check empty
-    if (que_fus.size() == 0) {
+    if (vec_fus.size() == 0) {
       continue;
     }
-    // result check
-    if (que_fus.front().wait_for(chrono::seconds(1)) == future_status::ready) {
-      // done
-      if (que_fus.front().get() == true) {
+    for (auto iter = vec_fus.begin(); iter != vec_fus.end();) {
+      auto stat = iter->wait_for(chrono::seconds(1));
+      if (stat != future_status::ready) {
+        iter++;
+        continue;
+      }
+      if (iter->get() == true) {  //若失败，__DownloadPageToFile()内部会打印错误
         done_amount++;
-        float progress = done_amount * 1.0f / amount * 100.0f;
-        spdlog::info("[{:02.1f}%] {}/{}", progress, done_amount, amount);
+        iter = vec_fus.erase(iter);
+        if (done_amount % 10 == 0) {
+          float prog = done_amount * 1.0f / links_amount * 100.0f;
+          spdlog::info(" 下载进度: {:.1f}%, {}/{}", prog, done_amount,
+                       links_amount);
+        }
       }
-      // failed
-      else {
-        failed_amount++;
-      }
-      // cleanup
-      que_fus.pop();
     }
   }
-
-  spdlog::info("下载结果: {} 完成，{} 失败", done_amount, failed_amount);
+  spdlog::info(" 下载结果: {} 完成，{} 失败", done_amount, failed_amount);
 }
 
 void Downloader::CreatePath(const std::string &pathname) {
@@ -133,7 +128,7 @@ void Downloader::__SetCurlDefaultOpt(CURL *handle) {
   curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0);
   curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
   curl_easy_setopt(handle, CURLOPT_USERAGENT, AGENT.c_str());
-  curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, 320000);
+  curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, 640000);
 }
 
 void Downloader::__TransSymbol(std::string &str) {

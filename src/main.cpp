@@ -47,8 +47,8 @@ class App {
     // downloaded
     Downloader::MultiDownloadFiles(vec_strLinks);
 
-    cout << endl;
     spdlog::info("任务完成!");
+    cin.get();
     return 0;
   }
 
