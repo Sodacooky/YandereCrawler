@@ -1,6 +1,5 @@
 ﻿#ifndef __DOWNLOADER_H__
 #define __DOWNLOADER_H__
-#define _CRT_SECURE_NO_WARNINGS  // disable msvc warnings
 
 #include <curl/curl.h>
 #include <spdlog/spdlog.h>
@@ -23,9 +22,9 @@ class Downloader {
   static bool DownloadPageToString(const std::string &url,
                                    std::string &src_out);
 
-  // 单线程下载一组图片到文件
+  // 下载一组图片到文件
   // DownloadPageToFile的封装
-  static void DownloadFiles(const std::vector<std::string> &links);
+  static void MultiDownloadFiles(const std::vector<std::string> &links);
 
   // 创建文件夹
   static void CreatePath(const std::string &pathname);
