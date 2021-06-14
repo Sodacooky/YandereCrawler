@@ -90,7 +90,7 @@ void Downloader::MultiDownloadFiles(const std::vector<std::string> &links) {
       if (iter->get() == true) {  //若失败，__DownloadPageToFile()内部会打印错误
         done_amount++;
         iter = vec_fus.erase(iter);
-        if (done_amount % 10 == 0) {
+        if (done_amount % 8 == 0) {
           float prog = done_amount * 1.0f / links_amount * 100.0f;
           spdlog::info(" 下载进度: {:.1f}%, {}/{}", prog, done_amount,
                        links_amount);
@@ -125,21 +125,10 @@ size_t Downloader::__WriteToString(char *buff, size_t block_size,
 }
 
 void Downloader::__SetCurlDefaultOpt(CURL *handle) {
-  curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0);
-  curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
+  // curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0);
+  // curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
   curl_easy_setopt(handle, CURLOPT_USERAGENT, AGENT.c_str());
   curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, 640000);
-}
-
-void Downloader::__TransSymbol(std::string &str) {
-  for (auto iter = str.begin(); iter != str.end();) {
-    if (*iter == '%') {
-      iter = str.erase(iter, iter + 3);
-      iter = str.insert(iter, ' ') + 1;
-    } else {
-      iter++;
-    }
-  }
 }
 
 std::string Downloader::__ExtractFilename(const std::string &src_str) {
@@ -151,9 +140,7 @@ std::string Downloader::__ExtractFilename(const std::string &src_str) {
       break;
     }
   }
-  string tmp(start + 1, src_str.end());
-  __TransSymbol(tmp);
-  return tmp;
+  return HTMLSymbolToRaw(string(start + 1, src_str.end()));
 }
 
 std::string Downloader::__ExtractShort(const std::string &src_str) {

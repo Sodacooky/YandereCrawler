@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include "Tool.h"
 /*
   提供网页和图片的下载功能
 */
@@ -39,9 +40,6 @@ class Downloader {
 
   // 设置一些相同的参数
   static void __SetCurlDefaultOpt(CURL *handle);
-
-  // 将字符串内的%20替换为空格
-  static void __TransSymbol(std::string &str);
 
   // 将链接的最后一段（通常是文件名）提取出来
   static std::string __ExtractFilename(const std::string &src_str);

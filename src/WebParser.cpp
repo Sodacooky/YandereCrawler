@@ -8,7 +8,7 @@ void WebParser::__Do() {
     string url = "https://yande.re/post?page=" + to_string(pageNow);
     url.append("&tags=");
     for (auto &tag : m_rvec_strTags) {
-      url.append(tag);
+      url.append(RawToHTMLSymbol(tag));
       url.append("+");
     }
     m_vec_strPageLinks.push_back(url);
@@ -20,8 +20,10 @@ void WebParser::__Do() {
   for (int index = 0; index != m_vec_strPageLinks.size(); index++) {
     fus_fetching.push_back(async(&WebParser::__GetLinks, this, index));
     float progress = (index + 1) * 1.0f / m_vec_strPageLinks.size() * 100.0f;
-    spdlog::info("[{:.1f}%] 正在下载第 {} 页链接数据", progress, index + 1);
-    this_thread::sleep_for(chrono::milliseconds(500));
+    if (index % 8 == 0) {
+      spdlog::info("[{:.1f}%] 正在下载第 {} 页链接数据", progress, index + 1);
+    }
+    this_thread::sleep_for(chrono::milliseconds(250));
   }
 
   //回收数据

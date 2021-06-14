@@ -7,6 +7,7 @@
 
 #include "Downloader.h"
 #include "NavigationParser.h"
+#include "Tool.h"
 #include "WebParser.h"
 
 using namespace std;
@@ -90,10 +91,11 @@ class App {
 
   void FetchPageAmount() {
     string first_page_url = "https://yande.re/post?tags=";
-    for (auto &tag : vec_strTags) {
-      first_page_url.append(tag);
+    for (auto& tag : vec_strTags) {
+      first_page_url.append(RawToHTMLSymbol(tag));
       first_page_url.append("+");
     }
+    spdlog::info(first_page_url);
     string first_page_source;
     Downloader::DownloadPageToString(first_page_url, first_page_source);
     NavigationParser navigationParser(first_page_source);

@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 
 # Project name: Proj
-project(Proj VERSION 0.3)
+project(Proj VERSION 0.4)
 
 aux_source_directory(./src SRC_LIST)
 add_executable(Proj ${SRC_LIST})
@@ -18,6 +18,3 @@ target_link_libraries(Proj PRIVATE CURL::libcurl)
 
 find_package(spdlog CONFIG REQUIRED)
 target_link_libraries(Proj PRIVATE spdlog::spdlog spdlog::spdlog_header_only)
-
-find_package(nlohmann_json CONFIG REQUIRED)
-target_link_libraries(Proj PRIVATE nlohmann_json nlohmann_json::nlohmann_json)
