@@ -6,6 +6,8 @@ C++ yande.re 下载器
 
 在Linux下你可能需要手动设置CURLOPT_PROXY以使程序通过你的代理。
 
+![Screenshot](docs/screenshot.jpg)
+
 # 安装与编译
 
 依赖curl、spdlog、nlohmann-json。
