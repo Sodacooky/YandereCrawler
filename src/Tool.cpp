@@ -1,25 +1,23 @@
 ﻿#include "Tool.h"
 
-std::string HTMLSymbolToRaw(const std::string& in_string) {
-  auto out_string = in_string;
-  // space
-  while (true) {
-    auto pos = out_string.find("%20");
-    if (pos == std::string::npos) break;
-    out_string.erase(pos, pos + 3);
-    out_string.insert(out_string.begin() + pos, ' ');
-  }
-  return out_string;
+using namespace std;
+
+int StringToInt(const std::string &src_str)
+{
+  istringstream ss(src_str);
+  int value = -INT_MAX;
+  ss >> value;
+  return value;
 }
 
-std::string RawToHTMLSymbol(const std::string& in_string) {
-  auto out_string = in_string;
-  // +
-  while (true) {
-    auto pos = out_string.find("+");
-    if (pos == std::string::npos) break;
-    out_string.erase(pos, 1);
-    out_string.insert(pos, "%2B");
+std::list<std::string> SplitWord(const std::string &line)
+{
+  istringstream ss(line);
+  string tmp_word;
+  list<string> list;
+  while (ss >> tmp_word)
+  {
+    list.push_back(tmp_word);
   }
-  return out_string;
+  return list;
 }

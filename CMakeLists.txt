@@ -18,3 +18,6 @@ target_link_libraries(Proj PRIVATE CURL::libcurl)
 
 find_package(spdlog CONFIG REQUIRED)
 target_link_libraries(Proj PRIVATE spdlog::spdlog spdlog::spdlog_header_only)
+
+find_package(nlohmann_json CONFIG REQUIRED)
+target_link_libraries(Proj PRIVATE nlohmann_json nlohmann_json::nlohmann_json)

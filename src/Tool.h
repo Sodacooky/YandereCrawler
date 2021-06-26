@@ -1,14 +1,20 @@
 ﻿#ifndef __TOOL_H__
 #define __TOOL_H__
 
+#include <list>
+#include <map>
+#include <sstream>
 #include <string>
 
-//将HTML转义后的字符，转换回其原始
-//目前仅支持空格
-std::string HTMLSymbolToRaw(const std::string& in_string);
+// copy from my browser
+const std::string CURL_AGENT =
+    "User-Agent,Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36 Edg/88.0.705.74";
 
-//将字符转换为HTML转义字符
-//目前仅支持符号 +
-std::string RawToHTMLSymbol(const std::string& in_string);
+// atoi
+int StringToInt(const std::string &src_str);
 
-#endif  // __TOOL_H__
+// 以空格分割行
+std::list<std::string> SplitWord(const std::string& line);
+
+#endif // __TOOL_H__

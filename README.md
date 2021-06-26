@@ -4,21 +4,19 @@ C++ yande.re 下载器
 
 输入tags，界定页的范围，然后在yande.re中下载符合输入的tags的图片。
 
-仅保证Windows平台。
-
-虽然可在Linux下编译通过，但经我测试yande.re无法在Linux下通过CURL(通过proxychains)正常访问，也许需要全局____。
+在Linux下你可能需要手动设置CURLOPT_PROXY以使程序通过你的代理。
 
 # 安装与编译
 
-依赖curl、spdlog。
+依赖curl、spdlog、nlohmann-json。
 
-如果你使用vcpkg并设置好了环境变量那么你可以直接使用CMake编译或使用VisualStudio。
+如果你使用vcpkg并设置好了环境变量那么你可以直接使用CMake编译，或直接使用VisualStudio。
 
-否则你需要自己修改CMake。
+如果使用CMake，你可能需要自己修改CMake。
 
 # 为什么是C++？
 
-懂的都懂。
+我只会这个。
 
 # 关于滥用
 
