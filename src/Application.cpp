@@ -47,6 +47,11 @@ void Application::__TaskInput()
     spdlog::critical("Tags输入无效");
     exit(-100);
   }
+  if (list_tags.size() > 6)
+  {
+    spdlog::critical("最多支持6个Tag");
+    exit(-101);
+  }
 
   //set path
   m_strPath = "./" + *list_tags.begin();
@@ -65,12 +70,12 @@ void Application::__TaskInput()
   if (page_amount < 0)
   {
     spdlog::critical("请检查网络连接和代理");
-    exit(-100);
+    exit(-102);
   }
   if (page_amount == 0)
   {
     spdlog::critical("请检查输入的Tags");
-    exit(-100);
+    exit(-103);
   }
 
   //page range
@@ -80,6 +85,7 @@ void Application::__TaskInput()
     m_nEndPage = page_amount;
     spdlog::warn("已将终止页设置为 {}", m_nEndPage);
   }
+  spdlog::info("将下载从{}到{}共 {} 页", m_nStartPage, m_nEndPage, m_nEndPage - m_nStartPage + 1);
 }
 
 void Application::__ExecuteTask()
@@ -88,14 +94,14 @@ void Application::__ExecuteTask()
   for (int now_page = m_nStartPage; now_page <= m_nEndPage; now_page++)
   {
     //download and extract links
+    spdlog::info("正在下载第 {} 页", now_page);
     m_LinkGenerator.ChangePage(now_page);
     auto page_content = PageDownloader::Download(m_LinkGenerator.Generate(), m_Config);
     std::list<std::string> page_links = ImageLinkExtracter::Extract(page_content);
     //download and report
-    spdlog::info("正在下载第 {} 页", now_page);
-    int done_amount = MultiFileDownloader::Download(page_links, m_strPath, m_Config);
-    spdlog::info("第 {} 页下载完成，{} 成功，{} 失败", now_page, done_amount, page_links.size() - done_amount);
+    MultiFileDownloader::Download(page_links, m_strPath, m_Config);
     std::this_thread::sleep_for(std::chrono::seconds(1));
+    spdlog::info("第 {} 页下载完成", now_page);
   }
   spdlog::info("    ---  下载完成  ---");
 }
@@ -103,7 +109,7 @@ void Application::__ExecuteTask()
 std::list<std::string> Application::__InputTags()
 {
   std::string input_line;
-  spdlog::info("请输入Tags(如: miko no_bra):");
+  spdlog::info("请输入Tags，最多6个(如: miko no_bra):");
   std::getline(std::cin, input_line);
   std::list<std::string> m_listTags = SplitWord(input_line);
   spdlog::info("输入了 {} 个Tags", m_listTags.size());
@@ -117,12 +123,12 @@ void Application::__InputPageRange()
   if (m_nStartPage > m_nEndPage)
   {
     spdlog::critical("输入不正确");
-    exit(-101);
+    exit(-104);
   }
   if (m_nStartPage <= 0 || m_nEndPage <= 0)
   {
     spdlog::critical("输入不正确");
-    exit(-101);
+    exit(-105);
   }
 }
 

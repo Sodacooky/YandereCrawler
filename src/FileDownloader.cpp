@@ -16,6 +16,21 @@ std::string FileDownloader::__ExtractFilename(CURL *curl_handle,
   char *raw_tmp = curl_easy_unescape(curl_handle, escaped_str.c_str(), 0, &raw_str_length);
   std::string raw_str(raw_tmp, raw_str_length);
   curl_free(raw_tmp);
+
+  //剔除非法字符
+  std::string illegal_charset = "\\/:*?\"<>|";
+  for (auto iter = raw_str.begin(); iter != raw_str.end();)
+  {
+    if (illegal_charset.find(*iter) != std::string::npos)
+    {
+      iter = raw_str.erase(iter);
+    }
+    else
+    {
+      iter++;
+    }
+  }
+
   return raw_str;
 }
 
@@ -33,7 +48,7 @@ size_t FileDownloader::Download(const std::string &path,
   file = fopen(fullpath.c_str(), "wb");
   if (file == nullptr)
   {
-    spdlog::critical("写文件失败");
+    spdlog::critical("{} 写文件失败", fullpath);
     return false;
   }
   // set curl
@@ -58,6 +73,15 @@ size_t FileDownloader::Download(const std::string &path,
     spdlog::critical("CURL 错误代码 : {}", result);
     spdlog::critical("失败 {}", filename);
     return 0;
+  }
+  //
+  if (filename.size() < 32)
+  {
+    spdlog::info("  已下载 {}", std::string(filename.begin(), filename.end()));
+  }
+  else
+  {
+    spdlog::info("  已下载 {}", std::string(filename.begin(), filename.begin() + 32));
   }
   return std::filesystem::file_size(fullpath);
 }

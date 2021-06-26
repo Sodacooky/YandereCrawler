@@ -1,14 +1,13 @@
 ﻿#include "MultiFileDownloader.h"
 
-int MultiFileDownloader::Download(const std::list<std::string> &list,
-                                  const std::string &path,
-                                  const Config &config)
+void MultiFileDownloader::Download(const std::list<std::string> &list,
+                                   const std::string &path,
+                                   const Config &config)
 {
   auto thread_amount = config.DownloadThreadAmount();
 
   std::list<std::future<size_t>> list_future;
   auto list_iter = list.begin();
-  int done_amount = 0;
 
   while (list_iter != list.end())
   {
@@ -27,11 +26,6 @@ int MultiFileDownloader::Download(const std::list<std::string> &list,
       //完成
       if (future_iter->wait_for(std::chrono::milliseconds(250)) == std::future_status::ready)
       {
-        if (future_iter->get() != 0)
-        {
-          done_amount++;
-        }
-        spdlog::info(" 已完成 {}/{}", done_amount, list.size());
         future_iter = list_future.erase(future_iter);
       }
       else
@@ -40,5 +34,7 @@ int MultiFileDownloader::Download(const std::list<std::string> &list,
       }
     } // end while (future_iter != list_future.end())
   }   // end while (list_iter != list.end())
-  return done_amount;
+
+  //list_future析构时等待任务完成
+  list_future.clear();
 }

@@ -16,8 +16,7 @@
 class MultiFileDownloader
 {
 public:
-  //返回下载成功数量
-  static int Download(const std::list<std::string> &list, const std::string &path, const Config &config);
+  static void Download(const std::list<std::string> &list, const std::string &path, const Config &config);
 };
 
 #endif // __MULTIFILEDOWNLOADER_H__
