@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <iostream>
 #include <spdlog/spdlog.h>
+#include <thread>
 
 Application::Application()
 	: m_bConfigLoaded(false),
