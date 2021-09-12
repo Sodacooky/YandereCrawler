@@ -6,10 +6,7 @@ PageLinkGenerator::PageLinkGenerator()
 	m_pCurl = curl_easy_init();
 }
 
-PageLinkGenerator::~PageLinkGenerator()
-{
-	curl_easy_cleanup(m_pCurl);
-}
+PageLinkGenerator::~PageLinkGenerator() { curl_easy_cleanup(m_pCurl); }
 
 void PageLinkGenerator::AddTag(const std::string &tag)
 {

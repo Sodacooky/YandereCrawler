@@ -4,17 +4,11 @@ C++ yande.re 下载器
 
 输入tags，界定页的范围，然后在yande.re中下载符合输入的tags的图片。
 
-在Linux下你可能需要手动设置CURLOPT_PROXY以使程序通过你的代理。
-
 ![Screenshot](docs/screenshot.jpg)
 
 # 安装与编译
 
-依赖curl、spdlog、nlohmann-json。
-
-如果你使用vcpkg并设置好了环境变量那么你可以直接使用CMake编译，或直接使用VisualStudio。
-
-如果使用CMake，你可能需要自己修改CMake。
+依赖curl、spdlog、nlohmann-json，推荐使用vcpkg安装。
 
 # 为什么是C++？
 
@@ -22,6 +16,6 @@ C++ yande.re 下载器
 
 # 关于滥用
 
-yande.re原则上不允许此类程序，~~我并不会为此程序的滥用负责~~， 但是管理员态度不太好，上传原图说是low-res打回这都是他们的小问题了（正好是个zh_cn管理员），手动上传的用户被消磨了积极性那么爬虫用户也离这不远了。
+网站管理员的行径让我发自内心地建议你下爆。
 
-换句话说，下爆。
+同时推荐Danbooru，虽然免费有1000页的查看限制，但管理员是好东西所以不像前者那样缺图。（把正常的图打回不就缺了嘛）

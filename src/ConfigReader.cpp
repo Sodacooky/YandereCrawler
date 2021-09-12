@@ -21,7 +21,7 @@ Config ConfigReader::Read()
 	}
 
 	std::ifstream config_file(CONFIG_FILENAME);
-	if (config_file.is_open() == false)
+	if (!config_file.is_open())
 	{
 		throw "无法打开config.json";
 	}
@@ -68,7 +68,7 @@ void ConfigReader::WriteDefault()
 	config["http_proxy_addr"] = default_config.ProxyAddress();
 
 	std::ofstream config_file(CONFIG_FILENAME);
-	if (config_file.is_open() == false)
+	if (!config_file.is_open())
 	{
 		throw "无法创建config.json文件";
 	}
