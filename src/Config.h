@@ -12,30 +12,25 @@
  */
 class Config
 {
-public:
-	// default config
-	Config();
-	// assign
-	Config(bool all_page, bool http_proxy, int thread_amount, const std::string &proxy_addr);
+  public:
+    //尝试从文件中读取
+    void TryLoad();
 
-public:
-	//
-	bool DefaultDownloadAllPage() const;
-	void DefaultDownloadAllPage(bool all_page);
-	//
-	bool EnableHttpProxy() const;
-	void EnableHttpProxy(bool http_proxy);
-	//
-	int DownloadThreadAmount() const;
-	void DownloadThreadAmount(int thread_amount);
-	//
-	std::string ProxyAddress() const;
-	void ProxyAddress(const std::string &proxy_addr);
+    //将当前配置写出到文件
+    void WriteOut();
 
-private:
-	bool m_bAllPage;
-	bool m_bHttpProxy;
-	int m_nThreadAmount;
-	std::string m_strProxyAddr;
+  public:
+    bool bAllPage            = false;
+    bool bHttpProxy          = false;
+    int nThreadAmount        = 1;
+    std::string strProxyAddr = "null";
+
+  private:
+    //默认路径的设置文件是否存在
+    static bool __IsFileExist();
+
+  private:
+    // default "config.json"
+    static const char *sm_cstrDefaultPath;
 };
-#endif // __CONFIG_H__
+#endif  // __CONFIG_H__

@@ -1,57 +1,61 @@
 ﻿#include "Config.h"
 
-Config::Config()
-	: m_bAllPage(false),
-	  m_bHttpProxy(false),
-	  m_nThreadAmount(1),
-	  m_strProxyAddr("null")
+#include <spdlog/spdlog.h>
+#include <filesystem>
+#include <fstream>
+#include <nlohmann/json.hpp>
+
+const char *Config::sm_cstrDefaultPath = "config.json";
+
+bool Config::__IsFileExist()
 {
+    std::filesystem::directory_entry entry(sm_cstrDefaultPath);
+    return entry.exists() && entry.is_regular_file();
 }
 
-Config::Config(bool all_page, bool http_proxy, int thread_amount, const std::string &proxy_addr)
-	: m_bAllPage(all_page),
-	  m_bHttpProxy(http_proxy),
-	  m_nThreadAmount(thread_amount),
-	  m_strProxyAddr(proxy_addr)
+void Config::WriteOut()
 {
+    nlohmann::json json;
+    json["default_all_page"]  = bAllPage;
+    json["enable_http_proxy"] = bHttpProxy;
+    json["thread_amount"]     = nThreadAmount;
+    json["http_proxy_addr"]   = strProxyAddr;
+    auto dump                 = json.dump(4);
+
+    std::ofstream file(sm_cstrDefaultPath);
+    file.write(dump.c_str(), dump.size());
+    file.close();
 }
 
-bool Config::DefaultDownloadAllPage() const
+void Config::TryLoad()
 {
-	return m_bAllPage;
-}
+    if (!__IsFileExist())
+    {
+        WriteOut();
+        spdlog::warn(u8"创建了默认配置文件");
+    }
 
-void Config::DefaultDownloadAllPage(bool all_page)
-{
-	m_bAllPage = all_page;
-}
+    std::ifstream config_file(sm_cstrDefaultPath);
+    if (!config_file.is_open())
+    {
+        spdlog::error(u8"无法打开配置文件，将使用默认配置");
+        return;
+    }
 
-bool Config::EnableHttpProxy() const
-{
-	return m_bHttpProxy;
-}
+    std::string config_json_dump;
+    while (config_file.peek() != EOF)
+    {
+        std::string tmpLine;
+        std::getline(config_file, tmpLine);
+        config_json_dump.append(tmpLine).append("\n");
+    }
+    config_json_dump.push_back('\0');
 
-void Config::EnableHttpProxy(bool http_proxy)
-{
-	m_bHttpProxy = http_proxy;
-}
-
-int Config::DownloadThreadAmount() const
-{
-	return m_nThreadAmount;
-}
-
-void Config::DownloadThreadAmount(int thread_amount)
-{
-	m_nThreadAmount = thread_amount;
-}
-
-std::string Config::ProxyAddress() const
-{
-	return m_strProxyAddr;
-}
-
-void Config::ProxyAddress(const std::string &proxy_addr)
-{
-	m_strProxyAddr = proxy_addr;
+    nlohmann::json config_json = nlohmann::json::parse(config_json_dump);
+    bAllPage                   = config_json["default_all_page"].get<bool>();
+    bHttpProxy                 = config_json["enable_http_proxy"].get<bool>();
+    nThreadAmount              = config_json["thread_amount"].get<int>();
+    strProxyAddr               = config_json["http_proxy_addr"].get<std::string>();
+    //虽然可能会因为文件没有写某个参数而引发问题，但这是用户手贱的问题
+    //不想写太多if去判断
 }

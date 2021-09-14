@@ -1,38 +1,35 @@
 ﻿#include "PageLinkGenerator.h"
 
-PageLinkGenerator::PageLinkGenerator()
+#include <curl/curl.h>
+#include <list>
+#include <sstream>
+
+const std::string PageLinkGenerator::sm_strHeader = "https://yande.re/post?page=";
+
+std::string PageLinkGenerator::Generate(int page)
 {
-	m_nPage = -1;
-	m_pCurl = curl_easy_init();
+    return sm_strHeader + std::to_string(page) + m_strTagsPart;
 }
 
-PageLinkGenerator::~PageLinkGenerator() { curl_easy_cleanup(m_pCurl); }
-
-void PageLinkGenerator::AddTag(const std::string &tag)
+PageLinkGenerator::PageLinkGenerator(const std::string &tags_line)
 {
-	m_listTags.push_back(tag);
-}
+    std::list<std::string> escaped_tags;
 
-void PageLinkGenerator::ChangePage(int page)
-{
-	if (page <= 0 || page >= 99999)
-	{
-		throw "invalid page.";
-	}
-	m_nPage = page;
-}
+    auto curl_handle = curl_easy_init();
+    std::istringstream ss(tags_line);
+    std::string tmp;
+    while (ss >> tmp)
+    {
+        auto escaped = curl_easy_escape(curl_handle, tmp.c_str(), 0);
+        tmp.assign(escaped);
+        curl_free(escaped);
+        escaped_tags.push_back(tmp);
+    }
+    curl_easy_cleanup(curl_handle);
 
-std::string PageLinkGenerator::Generate()
-{
-	std::string result = "https://yande.re/post?page=";
-	result.append(std::to_string(m_nPage));
-	result.append("&tags=");
-	for (auto &tag : m_listTags)
-	{
-		char *_tag = curl_easy_escape(m_pCurl, tag.c_str(), 0);
-		result.append(_tag);
-		result.append("+");
-		curl_free(_tag);
-	}
-	return result;
+    m_strTagsPart.assign("&tags=");
+    for (auto &tag : escaped_tags)
+    {
+        m_strTagsPart.append(tag).append("+");
+    }
 }

@@ -1,45 +1,69 @@
 ﻿#include "ImageLinkExtracter.h"
 
-std::list<std::string> ImageLinkExtracter::Extract(
-	const std::string &web_content)
+#include <curl/curl.h>
+#include "Downloader.h"
+
+size_t ImageLinkExtracter::__GetLinkPosition(size_t startpos, const std::string &src)
 {
-	//
-	std::list<std::string> result;
-	//当前查找位置
-	size_t nowFindingPos = 0;
-	//提取整个网页的所有图片链接
-	while (true)
-	{
-		// 找到链接位置
-		auto link_pos = __SeekLinkPosition(nowFindingPos, web_content);
-		if (link_pos == -1)
-			break; // "eof"
-
-		// 提取出链接
-		auto link = __ExtractLink(link_pos, web_content);
-		result.push_back(link);
-
-		// 当前查找位置移动到链接后
-		nowFindingPos = link_pos + link.size() + 1;
-	}
-	return result;
+    //<a class="directlink largeimg" href="..."
+    std::string link_header = R"(<a class="directlink largeimg" href=")";
+    //找到链接类头
+    auto pos = src.find(link_header, startpos);
+    if (pos != std::string::npos)
+    {
+        return pos + link_header.size();
+    }
+    else
+    {
+        return pos;
+    }
 }
 
-size_t ImageLinkExtracter::__SeekLinkPosition(size_t startpos, const std::string &web_content)
+std::string ImageLinkExtracter::__ExtractLink(size_t link_start_pos, const std::string &src)
 {
-	//找到链接类头
-	auto pos = web_content.find(R"(<a class="directlink largeimg")", startpos);
-	if (pos == std::string::npos)
-		return -1;
-	//从链接类头移动到链接位置
-	return web_content.find(R"(href=")", pos) + 6;
+    //链接以引号结束
+    auto link_end_pos = src.find("\"", link_start_pos);
+    //将链接头到引号前拷贝
+    return std::string(src.cbegin() + link_start_pos, src.cbegin() + link_end_pos);
 }
 
-std::string ImageLinkExtracter::__ExtractLink(size_t startpos, const std::string &web_content)
+std::string ImageLinkExtracter::__ExtractFilename(const std::string &url)
 {
-	//链接以引号结束
-	auto endPos = web_content.find("\"", startpos);
-	//将链接头到引号前拷贝
-	return std::string(web_content.cbegin() + startpos,
-					   web_content.cbegin() + endPos);
+    auto startpos = url.rfind('/') + 1;  //假定其不会出错
+    std::string filename(url.begin() + startpos, url.end());
+
+    // unescape
+    CURL *handle   = curl_easy_init();
+    auto filename_ = curl_unescape(filename.c_str(), filename.size());
+    filename.clear();
+    filename.assign(filename_);
+    curl_free(filename_);
+    curl_easy_cleanup(handle);
+
+    return filename;
+}
+
+std::map<std::string, std::string> ImageLinkExtracter::Extract(const std::string &search_page_url,
+                                                               const Config &config)
+{
+    auto src_byte_stream = Downlaoder::Download(search_page_url, config);
+    std::string src(src_byte_stream.data(), src_byte_stream.size());
+    std::map<std::string, std::string> links;
+
+    size_t link_pos = 0;
+    while (true)
+    {
+        link_pos = __GetLinkPosition(link_pos, src);
+        if (link_pos == std::string::npos)
+        {
+            break;
+        }
+
+        auto link     = __ExtractLink(link_pos, src);
+        auto filename = __ExtractFilename(link);
+
+        links.insert({filename, link});
+    }
+
+    return links;
 }
