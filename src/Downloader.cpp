@@ -6,19 +6,20 @@
 std::vector<char> Downlaoder::Download(const std::string &url, const Config &config)
 {
     const char *cstrAgent =
-        "User-Agent,Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like "
-        "Gecko) "
-        "Chrome/88.0.4324.182 Safari/537.36 Edg/88.0.705.74";
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/94.0.4606.81 Safari/537.36 Edg/94.0.992.50";
 
     std::vector<char> result;
 
     CURL *pCurl = curl_easy_init();
-    curl_easy_setopt(pCurl, CURLOPT_TIMEOUT_MS, 30000);
+    curl_easy_setopt(pCurl, CURLOPT_TIMEOUT_MS, 24000);
     curl_easy_setopt(pCurl, CURLOPT_FOLLOWLOCATION, 1);
     curl_easy_setopt(pCurl, CURLOPT_USERAGENT, cstrAgent);
     curl_easy_setopt(pCurl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, __CurlWriteFunc);
     curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &result);
+    // curl_easy_setopt(pCurl, CURLOPT_SSL_VERIFYPEER, 0);
+    // curl_easy_setopt(pCurl, CURLOPT_SSL_VERIFYHOST, 0);
     if (config.bHttpProxy)
     {
         curl_easy_setopt(pCurl, CURLOPT_PROXY, config.strProxyAddr.c_str());
@@ -29,7 +30,7 @@ std::vector<char> Downlaoder::Download(const std::string &url, const Config &con
 
     if (retCode != CURLE_OK)
     {
-        spdlog::error(u8"{} 获取失败!", url);
+        spdlog::error(u8"{} 获取失败!\n{}", url, retCode);
         return std::vector<char>();
     }
     else

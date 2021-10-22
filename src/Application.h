@@ -1,6 +1,7 @@
 ﻿#ifndef __APPLICATION_H__
 #define __APPLICATION_H__
 
+#include <atomic>
 #include <map>
 #include <string>
 #include <vector>
@@ -25,7 +26,10 @@ class Application
     void __DispatchDownloadThred(const std::map<std::string, std::string> &links);
 
     //下载线程
-    void __DownloadThreadFunc(const std::string &link, const std::string &filename);
+    void __DownloadThreadFunc(const std::string &link,
+                              const std::string &filename,
+                              std::atomic<int> &downloaded,
+                              int amount);
 
     //创建文件夹
     // dir_name不以分隔符结尾

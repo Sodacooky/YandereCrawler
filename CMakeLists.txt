@@ -1,8 +1,10 @@
 # maybe inneccesary
 cmake_minimum_required(VERSION 3.0.0)
 # vcpkg setting
+if(DEFINED ENV{VCPKG_ROOT})
 set(VCPKG_TARGET_TRIPLET x64-windows)
 set(CMAKE_TOOLCHAIN_FILE $ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
+endif()
 # c++17 enable
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED true)

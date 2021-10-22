@@ -2,6 +2,7 @@
 
 #include <spdlog/spdlog.h>
 #include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <future>
@@ -16,6 +17,8 @@
 
 int main()
 {
+    system("chcp 65001");
+
     Application app;
     app.Main();
     return 0;
@@ -70,13 +73,15 @@ void Application::__DispatchDownloadThred(const std::map<std::string, std::strin
 {
     std::queue<std::future<void>> que_future;
 
-    auto iter_pair = links.begin();
+    std::atomic<int> downloaded = 0;
+    auto iter_pair              = links.begin();
     while (iter_pair != links.end())
     {
         if (que_future.size() < m_config.nThreadAmount)
         {
             auto future = std::async(std::launch::async, &Application::__DownloadThreadFunc, this,
-                                     std::ref(iter_pair->second), std::ref(iter_pair->first));
+                                     std::ref(iter_pair->second), std::ref(iter_pair->first),
+                                     std::ref(downloaded), links.size());
             que_future.push(std::move(future));
             iter_pair++;
         }
@@ -91,7 +96,7 @@ void Application::__DispatchDownloadThred(const std::map<std::string, std::strin
     }
 
     //等待所有任务完成
-    while (que_future.size() != 0)
+    while (que_future.size() > 0)
     {
         auto status = que_future.front().wait_for(std::chrono::seconds(1));
         if (status == std::future_status::ready)
@@ -101,11 +106,30 @@ void Application::__DispatchDownloadThred(const std::map<std::string, std::strin
     }
 }
 
-void Application::__DownloadThreadFunc(const std::string &link, const std::string &filename)
+void Application::__DownloadThreadFunc(const std::string &link,
+                                       const std::string &filename,
+                                       std::atomic<int> &downloaded,
+                                       int amount)
 {
     auto data = Downlaoder::Download(link, m_config);
     __SaveToFile(m_strDirectory, filename, data);
-    std::cout << u8"■ ";
+    //进度+1
+    downloaded.store(downloaded.load() + 1);
+    //进度条
+    float percent = (downloaded.load() * 100.0f) / (amount * 1.0f);
+    printf("\r[");  // go back to line start point
+    for (int i = 0; i < 50; i++)
+    {
+        if (i * 2 <= percent)
+        {
+            printf("=");
+        }
+        else
+        {
+            printf(" ");
+        }
+    }
+    printf("] %5.1f %%", percent);
 }
 
 bool Application::__CreateDirectory(const std::string &dir_name)
