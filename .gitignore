@@ -1,5 +1,10 @@
 # Build
 build/
+cmake-build-debug/
+cmake-build-release/
+
+# IDEA
+.idea/
 
 # VSCode
 .vscode/

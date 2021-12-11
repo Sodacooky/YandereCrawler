@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <map>
+#include <mutex>
 #include <string>
 #include <vector>
 #include "Config.h"
@@ -19,37 +20,27 @@ class Application
 
   private:
     //用户交互
-    void __PromptInput();
-
-    //分配下载线程
-    //全部下载完成后返回
-    void __DispatchDownloadThred(const std::map<std::string, std::string> &links);
-
-    //下载线程
-    void __DownloadThreadFunc(const std::string &link,
-                              const std::string &filename,
-                              std::atomic<int> &downloaded,
-                              int amount);
-
+    void PromptInput();
     //创建文件夹
     // dir_name不以分隔符结尾
-    static bool __CreateDirectory(const std::string &dir_name);
-
-    //将二进制数据保存
-    // dir_name不以分隔符结尾
-    static void __SaveToFile(const std::string &dirname,
-                             const std::string &filename,
-                             const std::vector<char> &data);
+    static bool TryCreateDirectory(const std::string &dir_name);
+    //同步下载
+    // teemo 的初始化在函数外进行
+    void SyncDownload(const std::string &link, const std::string &path);
+    //提取文件名
+    std::string ExtractFilename(const std::string &link);
 
   private:
     //配置文件
     Config m_config;
     //输入的Tags行
-    std::string m_strTagsLine;
+    std::string m_tagsLine;
     //页码范围
-    int m_nStart, m_nEnd;
+    int m_startPage, m_endPage;
     //保存文件的目录
-    std::string m_strDirectory;
+    std::string m_directoryName;
+    //进度条打印锁
+    static std::mutex sm_mutexProgressBar;
 };
 
 #endif  // __APPLICATION_H__

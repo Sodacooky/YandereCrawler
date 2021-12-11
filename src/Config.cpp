@@ -1,8 +1,8 @@
 ﻿#include "Config.h"
 
-#include <spdlog/spdlog.h>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <nlohmann/json.hpp>
 
 const char *Config::sm_cstrDefaultPath = "config.json";
@@ -32,13 +32,13 @@ void Config::TryLoad()
     if (!__IsFileExist())
     {
         WriteOut();
-        spdlog::warn(u8"创建了默认配置文件");
+        std::cout << u8"创建了默认配置文件" << std::endl;
     }
 
     std::ifstream config_file(sm_cstrDefaultPath);
     if (!config_file.is_open())
     {
-        spdlog::error(u8"无法打开配置文件，将使用默认配置");
+        std::cout << u8"无法打开配置文件，将使用默认配置" << std::endl;
         return;
     }
 
