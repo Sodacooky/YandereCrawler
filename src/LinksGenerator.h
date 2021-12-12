@@ -28,8 +28,6 @@ class LinksGenerator
     std::vector<std::string> ExtractDownloadLinks(const std::string &pageLink);
     // download wbe source code via page link
     std::string DownloadPage(const std::string &pageLink) const;
-    // download page sub function, curl write callback
-    static size_t DownloadCallback(char *ptrBuffer, size_t size, size_t nmemb, void *ptrVecChar);
 
   private:
     // escaped tags arg, (&tags=....+...+

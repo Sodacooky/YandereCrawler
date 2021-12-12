@@ -15,8 +15,8 @@ project(YandereCrawler VERSION 0.5)
 aux_source_directory(./src SRC_LIST)
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
-find_package(CURL CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+find_package(cpr CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE cpr::cpr)
 
 find_package(teemo CONFIG REQUIRED)
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE teemo)

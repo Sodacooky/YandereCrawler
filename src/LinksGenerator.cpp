@@ -4,7 +4,7 @@
 
 #include "LinksGenerator.h"
 
-#include <curl/curl.h>
+#include <cpr/cpr.h>
 #include <fmt/format.h>
 #include <iostream>
 #include <sstream>
@@ -16,7 +16,8 @@ LinksGenerator::LinksGenerator(Config &config, const std::string &tagsLine, int 
 }
 
 void LinksGenerator::ConvertTagsLineToArg(const std::string &tagsLine)
-{  // header
+{
+    // header
     m_linksTagsArg.append("&tags=");
     //将某些字符转换为URL合法形式
     auto curl_handle = curl_easy_init();
@@ -101,39 +102,28 @@ std::vector<std::string> LinksGenerator::ExtractDownloadLinks(const std::string 
 
 std::string LinksGenerator::DownloadPage(const std::string &pageLink) const
 {
-    std::vector<char> bytes;
-
-    CURL *pCurl = curl_easy_init();
-    curl_easy_setopt(pCurl, CURLOPT_FOLLOWLOCATION, 1);
-    curl_easy_setopt(pCurl, CURLOPT_URL, pageLink.c_str());
-    curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, DownloadCallback);
-    curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &bytes);
+    cpr::Response response;
     if (m_config.bHttpProxy)
     {
-        curl_easy_setopt(pCurl, CURLOPT_PROXY, m_config.strProxyAddr.c_str());
-    }
-
-    auto retCode = curl_easy_perform(pCurl);
-    curl_easy_cleanup(pCurl);
-
-    if (retCode != CURLE_OK)
-    {
-        std::cout << fmt::format(u8"下载失败于 {}", pageLink) << std::endl;
-        return std::string();
+        response = cpr::Get(cpr::Url{pageLink}, cpr::Proxies{{"http", m_config.strProxyAddr}});
     }
     else
     {
-        // vector内部数组直接转成字符串
-        return std::string(bytes.data(), bytes.size());
+        response = cpr::Get(cpr::Url{pageLink});
     }
-}
-
-size_t LinksGenerator::DownloadCallback(char *ptrBuffer, size_t size, size_t nmemb, void *ptrVecChar)
-{
-    auto vec = (std::vector<char> *)ptrVecChar;
-    for (int i = 0; i != nmemb; i++)
+    if (response.status_code == 0)
     {
-        vec->push_back(ptrBuffer[i]);
+        // curl error
+        std::cout << u8"CURL错误: " << response.error.message << std::endl;
     }
-    return nmemb;
+    else if (response.status_code >= 400)
+    {
+        // http error
+        std::cout << u8"HTTP错误: " << response.status_code << std::endl;
+    }
+    else
+    {
+        return response.text;
+    }
+    return std::string();  // empty
 }

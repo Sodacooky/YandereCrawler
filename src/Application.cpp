@@ -4,10 +4,8 @@
 #include <fmt/format.h>
 #include <teemo/teemo.h>
 #include <chrono>
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
-#include <future>
 #include <iostream>
 #include <queue>
 #include <thread>
@@ -182,6 +180,6 @@ void Application::SyncDownload(const std::string &link, const std::string &path)
     FlushLine();
     if (result != teemo::SUCCESSED)
     {
-        printf("失败\n");
+        printf(u8"失败 %d\n", result);
     }
 }
