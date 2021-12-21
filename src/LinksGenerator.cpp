@@ -4,10 +4,10 @@
 
 #include "LinksGenerator.h"
 
-#include <cpr/cpr.h>
-#include <fmt/format.h>
-#include <iostream>
+#include <curl/curl.h>
 #include <sstream>
+
+#include "Downloader.h"
 
 LinksGenerator::LinksGenerator(Config &config, const std::string &tagsLine, int start, int end)
     : m_config(config), m_startPage(start), m_endPage(end)
@@ -62,7 +62,7 @@ std::string LinksGenerator::GeneratePageLink(int pageNumber)
 std::vector<std::string> LinksGenerator::ExtractDownloadLinks(const std::string &pageLink)
 {
     //下载网页
-    auto src = DownloadPage(pageLink);
+    auto src = Downloader::GetPage(pageLink, m_config);
     //对内容进行提取
     //定位链接位置
     auto GetLinkPosition = [&src](size_t startpos) {
@@ -98,32 +98,4 @@ std::vector<std::string> LinksGenerator::ExtractDownloadLinks(const std::string 
         links.push_back(link);
     }
     return links;
-}
-
-std::string LinksGenerator::DownloadPage(const std::string &pageLink) const
-{
-    cpr::Response response;
-    if (m_config.bHttpProxy)
-    {
-        response = cpr::Get(cpr::Url{pageLink}, cpr::Proxies{{"http", m_config.strProxyAddr}});
-    }
-    else
-    {
-        response = cpr::Get(cpr::Url{pageLink});
-    }
-    if (response.status_code == 0)
-    {
-        // curl error
-        std::cout << u8"CURL错误: " << response.error.message << std::endl;
-    }
-    else if (response.status_code >= 400)
-    {
-        // http error
-        std::cout << u8"HTTP错误: " << response.status_code << std::endl;
-    }
-    else
-    {
-        return response.text;
-    }
-    return std::string();  // empty
 }

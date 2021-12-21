@@ -5,7 +5,6 @@
 #ifndef YANDERECRAWLER_DOWNLOADER_H
 #define YANDERECRAWLER_DOWNLOADER_H
 
-#include <cpr/cpr.h>
 #include <string>
 
 #include "Config.h"
@@ -17,9 +16,13 @@ class Downloader
     static std::string GetPage(const std::string &url, const Config &config);
 
   public:
+    //单线程，备用
     //下载文件到finalPath
     // finalPath是指带文件名及其后缀的路径
     static bool GetFile(const std::string &url, const std::string &finalPath, const Config &config);
+    //复制粘贴了一份实现
+    //会打印进度条
+    static bool GetFileMultiThread(const std::string &url, const std::string &finalPath, const Config &config);
 };
 
 #endif  // YANDERECRAWLER_DOWNLOADER_H

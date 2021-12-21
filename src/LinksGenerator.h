@@ -26,8 +26,6 @@ class LinksGenerator
     std::string GeneratePageLink(int pageNumber);
     // use page link to get all picture downloading link
     std::vector<std::string> ExtractDownloadLinks(const std::string &pageLink);
-    // download wbe source code via page link
-    std::string DownloadPage(const std::string &pageLink) const;
 
   private:
     // escaped tags arg, (&tags=....+...+

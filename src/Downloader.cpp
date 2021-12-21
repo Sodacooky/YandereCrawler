@@ -4,8 +4,10 @@
 
 #include "Downloader.h"
 
+#include <cpr/cpr.h>
 #include <fmt/color.h>
 #include <fmt/format.h>
+#include <teemo/teemo.h>
 #include <chrono>
 #include <fstream>
 
@@ -82,4 +84,65 @@ bool Downloader::GetFile(const string &url, const string &finalPath, const Confi
         }
         return false;
     }
+}
+
+bool Downloader::GetFileMultiThread(const string &url, const string &finalPath, const Config &config)
+{
+    int64_t total = 114514, downloaded = 0, speed = 0;
+    //制造一个空行
+    auto FlushLine = []() {
+        for (int i = 0; i != 128; i++)
+        {
+            printf("\b \b");
+        }
+    };
+    // update bar
+    auto UpdateProgBar = [&]() {
+        FlushLine();
+        //进度条
+        float percent = (downloaded * 100.0f) / (total * 1.0f);
+        printf("\r[");  // go back to line start point
+        for (int i = 0; i < 50; i++)
+        {
+            if (i * 2 <= percent)
+            {
+                printf("=");
+            }
+            else
+            {
+                printf(" ");
+            }
+        }
+        printf("] %5.1f %%, %d KB/s", percent, speed / 1024);
+    };
+    // teemo::ProgressFunctor
+    auto ProjCallback = [&](int64_t total_new, int64_t downloaded_new) {
+        total      = total_new;
+        downloaded = downloaded_new;
+        UpdateProgBar();
+    };
+    // teemo::RealtimeSpeedFunctor
+    auto SpeedCallback = [&](int64_t speed_new) {
+        speed = speed_new;
+        UpdateProgBar();
+    };
+
+    teemo::Teemo downloader;
+    downloader.setThreadNum(config.nThreadAmount);
+    downloader.setRedirectedUrlCheckEnabled(true);
+    if (config.bHttpProxy)
+    {
+        downloader.setProxy(config.strProxyAddr);
+    }
+    auto future_result = downloader.start(url, finalPath, teemo::ResultFunctor(), ProjCallback, SpeedCallback);
+    auto result        = future_result.get();
+
+    FlushLine();
+    if (result != teemo::SUCCESSED)
+    {
+        printf(u8"失败 %d\n", result);
+        return false;
+    }
+
+    return true;
 }

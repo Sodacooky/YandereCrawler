@@ -24,9 +24,6 @@ class Application
     //创建文件夹
     // dir_name不以分隔符结尾
     static bool TryCreateDirectory(const std::string &dir_name);
-    //同步下载
-    // teemo 的初始化在函数外进行
-    void SyncDownload(const std::string &link, const std::string &path);
     //提取文件名
     std::string ExtractFilename(const std::string &link);
 

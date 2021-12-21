@@ -11,6 +11,7 @@
 #include <thread>
 
 #include "Config.h"
+#include "Downloader.h"
 #include "LinksGenerator.h"
 
 std::mutex Application::sm_mutexProgressBar;
@@ -47,7 +48,7 @@ void Application::Main()
             trimmed.append("...");
         }
         std::cout << fmt::format("({}/{}) {}", index + 1, links.size(), trimmed) << std::endl;
-        SyncDownload(links[index], m_directoryName + "/" + filename);
+        Downloader::GetFileMultiThread(links[index], m_directoryName + "/" + filename, m_config);
     }
 
     std::cout << u8"下载结束" << std::endl;
@@ -128,58 +129,4 @@ std::string Application::ExtractFilename(const std::string &link)
     }
 
     return filename;
-}
-
-void Application::SyncDownload(const std::string &link, const std::string &path)
-{
-    int64_t total = 114514, downloaded = 0, speed = 0;
-    //制造一个空行
-    auto FlushLine = []() {
-        for (int i = 0; i != 128; i++)
-        {
-            printf("\b \b");
-        }
-    };
-    // update bar
-    auto UpdateProgBar = [&]() {
-        FlushLine();
-        //进度条
-        float percent = (downloaded * 100.0f) / (total * 1.0f);
-        printf("\r[");  // go back to line start point
-        for (int i = 0; i < 50; i++)
-        {
-            if (i * 2 <= percent)
-            {
-                printf("=");
-            }
-            else
-            {
-                printf(" ");
-            }
-        }
-        printf("] %5.1f %%, %d KB/s", percent, speed / 1024);
-    };
-    // teemo::ProgressFunctor
-    auto ProjCallback = [&](int64_t total_new, int64_t downloaded_new) {
-        total      = total_new;
-        downloaded = downloaded_new;
-        UpdateProgBar();
-    };
-    // teemo::RealtimeSpeedFunctor
-    auto SpeedCallback = [&](int64_t speed_new) {
-        speed = speed_new;
-        UpdateProgBar();
-    };
-
-    teemo::Teemo downloader;
-    downloader.setThreadNum(m_config.nThreadAmount);
-    downloader.setRedirectedUrlCheckEnabled(true);
-    auto future_result = downloader.start(link, path, teemo::ResultFunctor(), ProjCallback, SpeedCallback);
-    auto result        = future_result.get();
-
-    FlushLine();
-    if (result != teemo::SUCCESSED)
-    {
-        printf(u8"失败 %d\n", result);
-    }
 }

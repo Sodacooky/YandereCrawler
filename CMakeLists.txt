@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 
 # Project name: Proj
-project(YandereCrawler VERSION 0.5)
+project(YandereCrawler VERSION 0.6)
 
 aux_source_directory(./src SRC_LIST)
 add_executable(${PROJECT_NAME} ${SRC_LIST})
