@@ -48,7 +48,7 @@ void Application::Main()
             trimmed.append("...");
         }
         std::cout << fmt::format("({}/{}) {}", index + 1, links.size(), trimmed) << std::endl;
-        Downloader::GetFileMultiThread(links[index], m_directoryName + "/" + filename, m_config);
+        Downloader::GetFileSingleThread(links[index], m_directoryName + "/" + filename, m_config);
     }
 
     std::cout << u8"下载结束" << std::endl;

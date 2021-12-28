@@ -22,9 +22,11 @@ BraceWrapping:
 IndentCaseLabels: true
 PointerAlignment: Right
 AlignOperands: true
-AlignConsecutiveAssignments: true
+AlignConsecutiveAssignments: Consecutive
 AccessModifierOffset: -2
-AllowShortCaseLabelsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortLoopsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: true
 KeepEmptyLinesAtTheStartOfBlocks: true
 IndentPPDirectives: AfterHash
 IncludeBlocks: Preserve

@@ -5,6 +5,7 @@
 #include "LinksGenerator.h"
 
 #include <curl/curl.h>
+#include <iostream>
 #include <sstream>
 
 #include "Downloader.h"
@@ -44,10 +45,13 @@ std::vector<std::string> LinksGenerator::Start()
     //从开始页到终止页生成概览页链接
     for (int now = m_startPage; now <= m_endPage; now++)
     {
-        for (auto &link : ExtractDownloadLinks(GeneratePageLink(now)))
+        auto links = ExtractDownloadLinks(GeneratePageLink(now));
+        if (links.empty()) break;
+        for (auto &link : links)
         {
             downloadingLinks.push_back(link);
         }
+        std::printf("[%d] ", now);
     }
     return downloadingLinks;
 }

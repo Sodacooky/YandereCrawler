@@ -45,7 +45,7 @@ std::string Downloader::GetPage(const std::string &url, const Config &config)
     }
 }
 
-bool Downloader::GetFile(const string &url, const string &finalPath, const Config &config)
+bool Downloader::GetFileSingleThread(const string &url, const string &finalPath, const Config &config)
 {
     // check if file can be create
     ofstream file(finalPath, ios::binary);
