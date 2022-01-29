@@ -8,7 +8,7 @@ C++ yande.re 下载器
 
 # 安装与编译
 
-依赖teemo(openssl+curl)、fmt、nlohmann-json，推荐使用vcpkg安装。
+依赖见CMakeLists，推荐使用vcpkg安装。
 
 # 为什么是C++？
 
@@ -16,4 +16,4 @@ C++ yande.re 下载器
 
 # 关于滥用
 
-网站管理员的行径让我发自内心地建议你下爆。
+yande.re的管理员都这样了你还不下爆？
