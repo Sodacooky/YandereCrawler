@@ -16,9 +16,9 @@ using namespace std;
 std::string Downloader::GetPage(const std::string &url, const Config &config)
 {
     cpr::Response response;
-    if (config.bHttpProxy)
+    if (config.isHttpProxy)
     {
-        cpr::Proxies proxies{{"http", config.strProxyAddr}, {"https", config.strProxyAddr}};
+        cpr::Proxies proxies{{"http", config.proxyAddr}, {"https", config.proxyAddr}};
         response = Get(cpr::Url{url}, proxies, cpr::ConnectTimeout{32s});
     }
     else
@@ -56,9 +56,9 @@ bool Downloader::GetFileSingleThread(const string &url, const string &finalPath,
     }
     // start download
     cpr::Response response;
-    if (config.bHttpProxy)
+    if (config.isHttpProxy)
     {
-        cpr::Proxies proxies{{"http", config.strProxyAddr}, {"https", config.strProxyAddr}};
+        cpr::Proxies proxies{{"http", config.proxyAddr}, {"https", config.proxyAddr}};
         response = cpr::Download(file, cpr::Url{url}, proxies, cpr::ConnectTimeout{32s});
     }
     else
@@ -128,11 +128,11 @@ bool Downloader::GetFileMultiThread(const string &url, const string &finalPath, 
     };
 
     teemo::Teemo downloader;
-    downloader.setThreadNum(config.nThreadAmount);
+    downloader.setThreadNum(config.threadAmount);
     downloader.setRedirectedUrlCheckEnabled(true);
-    if (config.bHttpProxy)
+    if (config.isHttpProxy)
     {
-        downloader.setProxy(config.strProxyAddr);
+        downloader.setProxy(config.proxyAddr);
     }
     auto future_result = downloader.start(url, finalPath, teemo::ResultFunctor(), ProjCallback, SpeedCallback);
     auto result        = future_result.get();

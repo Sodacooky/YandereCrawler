@@ -35,20 +35,19 @@ void Application::Main()
     m_directoryName = TryCreateDirectory(m_tagsLine) ? m_tagsLine : ".";
 
     std::cout << u8"正在获取链接..." << std::endl;
-    LinksGenerator linksGenerator(m_config, m_tagsLine, m_startPage, m_endPage);
-    auto links = linksGenerator.Start();
+    auto urls = LinksGenerator::Generate(m_startPage, m_endPage, m_tagsLine, m_config);
 
     std::cout << u8"正在下载图片..." << std::endl;
-    for (int index = 0; index != links.size(); index++)
+    for (int index = 0; index != urls.size(); index++)
     {
-        auto filename = ExtractFilename(links[index]);
+        auto filename = ExtractFilename(urls[index]);
         std::string trimmed(filename.begin(), filename.size() > 64 ? filename.begin() + 64 : filename.end());
         if (trimmed.size() >= 60)
         {
             trimmed.append("...");
         }
-        std::cout << fmt::format("({}/{}) {}", index + 1, links.size(), trimmed) << std::endl;
-        Downloader::GetFileSingleThread(links[index], m_directoryName + "/" + filename, m_config);
+        std::cout << fmt::format("({}/{}) {}", index + 1, urls.size(), trimmed) << std::endl;
+        Downloader::GetFileMultiThread(urls[index], m_directoryName + "/" + filename, m_config);
     }
 
     std::cout << u8"下载结束" << std::endl;
@@ -59,7 +58,7 @@ void Application::PromptInput()
     std::cout << u8"请以空格间隔输入Tags，如 miko hakurei_reimu :" << std::endl;
     std::getline(std::cin, m_tagsLine);
     std::cout << fmt::format(u8"输入了 {}", m_tagsLine) << std::endl;
-    if (m_config.bAllPage)
+    if (m_config.isAllPage)
     {
         m_startPage = 1;
         m_endPage   = 9999;

@@ -10,20 +10,15 @@
 
 #include "Downloader.h"
 
-LinksGenerator::LinksGenerator(Config &config, const std::string &tagsLine, int start, int end)
-    : m_config(config), m_startPage(start), m_endPage(end)
-{
-    ConvertTagsLineToArg(tagsLine);
-}
-
-void LinksGenerator::ConvertTagsLineToArg(const std::string &tagsLine)
+std::string LinksGenerator::ConvertTagsInputLineToUrlArg(const std::string &inputTagsLine)
 {
     // header
-    m_linksTagsArg.append("&tags=");
+    std::string resultArg;
+    resultArg.append("&tags=");
     //将某些字符转换为URL合法形式
     auto curl_handle = curl_easy_init();
     std::vector<std::string> tags;
-    std::istringstream ss(tagsLine);
+    std::istringstream ss(inputTagsLine);
     std::string unescaped;
     while (ss >> unescaped)
     {
@@ -35,38 +30,24 @@ void LinksGenerator::ConvertTagsLineToArg(const std::string &tagsLine)
     //装入
     for (auto &tag : tags)
     {
-        m_linksTagsArg.append(tag).append("+");
+        resultArg.append(tag).append("+");
     }
+    //
+    return resultArg;
 }
 
-std::vector<std::string> LinksGenerator::Start()
-{
-    std::vector<std::string> downloadingLinks;
-    //从开始页到终止页生成概览页链接
-    for (int now = m_startPage; now <= m_endPage; now++)
-    {
-        auto links = ExtractDownloadLinks(GeneratePageLink(now));
-        if (links.empty()) break;
-        for (auto &link : links)
-        {
-            downloadingLinks.push_back(link);
-        }
-        std::printf("[%d] ", now);
-    }
-    return downloadingLinks;
-}
-
-std::string LinksGenerator::GeneratePageLink(int pageNumber)
+std::string LinksGenerator::GeneratePageUrl(int pageNumber, const std::string &tagsUrlArg)
 {
     std::string result;
-    result.append("https://yande.re/post?page=").append(std::to_string(pageNumber)).append(m_linksTagsArg);
+    result.append("https://yande.re/post?page=").append(std::to_string(pageNumber)).append(tagsUrlArg);
     return result;
 }
 
-std::vector<std::string> LinksGenerator::ExtractDownloadLinks(const std::string &pageLink)
+std::vector<std::string> LinksGenerator::DownloadPageAndExtractPictureUrl(const std::string &pageUrl,
+                                                                          const Config &config)
 {
     //下载网页
-    auto src = Downloader::GetPage(pageLink, m_config);
+    auto src = Downloader::GetPage(pageUrl, config);
     //对内容进行提取
     //定位链接位置
     auto GetLinkPosition = [&src](size_t startpos) {
@@ -102,4 +83,25 @@ std::vector<std::string> LinksGenerator::ExtractDownloadLinks(const std::string 
         links.push_back(link);
     }
     return links;
+}
+
+std::vector<std::string> LinksGenerator::Generate(int startPage,
+                                                  int endPage,
+                                                  const std::string &inputTagsLine,
+                                                  const Config &config)
+{
+    std::vector<std::string> downloadingLinks;
+    auto urlTagsArg = ConvertTagsInputLineToUrlArg(inputTagsLine);
+    //从开始页到终止页生成概览页链接
+    for (int now = startPage; now <= endPage; now++)
+    {
+        auto links = DownloadPageAndExtractPictureUrl(GeneratePageUrl(now, urlTagsArg), config);
+        if (links.empty()) break;
+        for (auto &link : links)
+        {
+            downloadingLinks.push_back(link);
+        }
+        std::printf("[%d] ", now);
+    }
+    return downloadingLinks;
 }

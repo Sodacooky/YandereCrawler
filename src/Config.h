@@ -17,20 +17,20 @@ class Config
     void TryLoad();
 
     //将当前配置写出到文件
-    void WriteOut();
+    void TryWriteOut();
 
   public:
-    bool bAllPage            = false;
-    bool bHttpProxy          = false;
-    int nThreadAmount        = 1;
-    std::string strProxyAddr = "null";
+    bool isAllPage        = false;
+    bool isHttpProxy      = false;
+    int threadAmount      = 1;
+    std::string proxyAddr = "null";
 
   private:
     //默认路径的设置文件是否存在
-    static bool __IsFileExist();
+    static bool IsFileExist();
 
   private:
     // default "config.json"
-    static const char *sm_cstrDefaultPath;
+    static const char *sm_defaultPath;
 };
 #endif  // __CONFIG_H__

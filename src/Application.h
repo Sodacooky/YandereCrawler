@@ -25,7 +25,7 @@ class Application
     // dir_name不以分隔符结尾
     static bool TryCreateDirectory(const std::string &dir_name);
     //提取文件名
-    std::string ExtractFilename(const std::string &link);
+    static std::string ExtractFilename(const std::string &link);
 
   private:
     //配置文件
